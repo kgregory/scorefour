@@ -94,7 +94,7 @@ export default function Home() {
         <title>Score Four</title>
         <meta
           name="description"
-          content="First attempt at using create-t3-app, tailwind"
+          content="A fake board game called Score Four."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
