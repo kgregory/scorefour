@@ -27,14 +27,14 @@ const Circle = (props: CircleProps) => {
 
   return (
     <div
-      className="min-h-16 min-w-16 origin-center rounded-full border-4 border-solid border-blue-500 bg-white text-center text-lg  shadow-lg"
+      className="min-h-8 min-w-8 origin-center rounded-full border-4 border-solid border-blue-500 bg-white text-center text-lg shadow-lg sm:min-h-16  sm:min-w-16"
       onClick={onClick}
       role="button"
     >
       <div
-        className={`flex min-h-16 min-w-16 items-center justify-center rounded-full border-4 ${colorClasses}`}
+        className={`flex size-full items-center justify-center rounded-full border-4 ${colorClasses}`}
       >
-        {variant !== "empty" ? "4" : null}
+        {variant !== "empty" ? "4" : <>&nbsp;</>}
       </div>
     </div>
   );
