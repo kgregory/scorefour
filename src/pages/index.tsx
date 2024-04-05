@@ -23,12 +23,12 @@ const Circle = (props: CircleProps) => {
         </div>
       )}
       {variant === "yellow" && (
-        <div className="flex flex min-h-16 items-center items-center justify-center rounded-full border-4 border-amber-200 bg-amber-400 text-amber-200">
+        <div className="flex flex min-h-16 items-center justify-center rounded-full border-4 border-amber-200 bg-amber-400 text-amber-200">
           4
         </div>
       )}
       {variant === "win" && (
-        <div className="flex min-h-16 items-center rounded-full border-4 border-green-500 bg-green-600 text-green-500">
+        <div className="flex min-h-16 items-center justify-center rounded-full border-4 border-green-500 bg-green-600 text-green-500">
           4
         </div>
       )}
@@ -40,7 +40,7 @@ const Circle = (props: CircleProps) => {
 };
 
 interface BoardProps {
-  data: Array<"red" | "yellow" | undefined>;
+  data: Array<"red" | "yellow" | "win" | undefined>;
   handleTurn: (column: number) => void;
 }
 
@@ -66,12 +66,17 @@ const Board = (props: BoardProps) => {
 };
 
 const Game = () => {
-  const [board, setBoard] = React.useState<Array<"red" | "yellow" | undefined>>(
-    Array(rows * columns).fill(undefined),
-  );
+  const [board, setBoard] = React.useState<
+    Array<"red" | "yellow" | "win" | undefined>
+  >(Array(rows * columns).fill(undefined));
   const [player, setPlayer] = React.useState<"red" | "yellow">("red");
+  const [winner, setWinner] = React.useState<"red" | "yellow" | "draw">();
 
   const handleTurn = (column: number) => {
+    if (winner != null) {
+      return;
+    }
+
     const newBoard = [...board];
     // check the column from the bottom up
     for (let i = rows - 1; i >= 0; i -= 1) {
@@ -80,11 +85,97 @@ const Game = () => {
         break;
       }
     }
+
+    // row check
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < columns - 3; j++) {
+        if (
+          newBoard[i * columns + j] === player &&
+          newBoard[i * columns + j + 1] === player &&
+          newBoard[i * columns + j + 2] === player &&
+          newBoard[i * columns + j + 3] === player
+        ) {
+          newBoard[i * columns + j] = "win";
+          newBoard[i * columns + j + 1] = "win";
+          newBoard[i * columns + j + 2] = "win";
+          newBoard[i * columns + j + 3] = "win";
+        }
+      }
+    }
+
+    // column check
+    for (let i = 0; i < rows - 3; i++) {
+      for (let j = 0; j < columns; j++) {
+        if (
+          newBoard[i * columns + j] === player &&
+          newBoard[(i + 1) * columns + j] === player &&
+          newBoard[(i + 2) * columns + j] === player &&
+          newBoard[(i + 3) * columns + j] === player
+        ) {
+          newBoard[i * columns + j] = "win";
+          newBoard[(i + 1) * columns + j] = "win";
+          newBoard[(i + 2) * columns + j] = "win";
+          newBoard[(i + 3) * columns + j] = "win";
+          setWinner(player);
+        }
+      }
+
+      // diagonal check
+      for (let j = 0; j < columns - 3; j++) {
+        if (
+          newBoard[i * columns + j] === player &&
+          newBoard[(i + 1) * columns + j + 1] === player &&
+          newBoard[(i + 2) * columns + j + 2] === player &&
+          newBoard[(i + 3) * columns + j + 3] === player
+        ) {
+          newBoard[i * columns + j] = "win";
+          newBoard[(i + 1) * columns + j + 1] = "win";
+          newBoard[(i + 2) * columns + j + 2] = "win";
+          newBoard[(i + 3) * columns + j + 3] = "win";
+          setWinner(player);
+        }
+        if (
+          newBoard[i * columns + j + 3] === player &&
+          newBoard[(i + 1) * columns + j + 2] === player &&
+          newBoard[(i + 2) * columns + j + 1] === player &&
+          newBoard[(i + 3) * columns + j] === player
+        ) {
+          newBoard[i * columns + j + 3] = "win";
+          newBoard[(i + 1) * columns + j + 2] = "win";
+          newBoard[(i + 2) * columns + j + 1] = "win";
+          newBoard[(i + 3) * columns + j] = "win";
+          setWinner(player);
+        }
+      }
+    }
+
     setBoard(newBoard);
     setPlayer(player === "red" ? "yellow" : "red");
   };
 
-  return <Board data={board} handleTurn={handleTurn} />;
+  const handleReset = () => {
+    setBoard(Array(rows * columns).fill(undefined));
+    setPlayer("red");
+    setWinner(undefined);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-8">
+      {winner != null ? (
+        winner === "draw" ? (
+          <div>It&apos;s a draw!</div>
+        ) : (
+          <div className="capitalize">{winner} wins!</div>
+        )
+      ) : (
+        <div>It&apos;s {player}&apos;s turn</div>
+      )}
+      <button onClick={handleReset} className="btn">
+        Reset
+      </button>
+      <Board data={board} handleTurn={handleTurn} />
+    </div>
+  );
 };
 
 export default function Home() {
