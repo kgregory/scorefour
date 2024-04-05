@@ -1,19 +1,110 @@
 import Head from "next/head";
+import * as React from "react";
+
+const rows = 6;
+const columns = 7;
+
+interface CircleProps {
+  onClick: () => void;
+  variant?: "empty" | "red" | "yellow" | "win";
+}
+
+const Circle = (props: CircleProps) => {
+  const { onClick, variant = "empty" } = props;
+  return (
+    <div
+      className="min-h-16 min-w-16 origin-center rounded-full border-4 border-solid border-blue-500 bg-white text-center text-lg  shadow-lg"
+      onClick={onClick}
+      role="button"
+    >
+      {variant === "red" && (
+        <div className="flex flex min-h-16 items-center justify-center rounded-full border-4 border-red-500 bg-red-700 text-red-500">
+          4
+        </div>
+      )}
+      {variant === "yellow" && (
+        <div className="flex flex min-h-16 items-center items-center justify-center rounded-full border-4 border-amber-200 bg-amber-400 text-amber-200">
+          4
+        </div>
+      )}
+      {variant === "win" && (
+        <div className="flex min-h-16 items-center rounded-full border-4 border-green-500 bg-green-600 text-green-500">
+          4
+        </div>
+      )}
+      {variant === "empty" && (
+        <div className="quickmarch flex min-h-16 rounded-full border-4 border-gray-200 bg-white"></div>
+      )}
+    </div>
+  );
+};
+
+interface BoardProps {
+  data: Array<"red" | "yellow" | undefined>;
+  handleTurn: (column: number) => void;
+}
+
+const Board = (props: BoardProps) => {
+  const { data, handleTurn } = props;
+  return (
+    <div className="min-w-96 border-8 border-solid border-blue-600 bg-gradient-to-b from-blue-700 to-blue-800 p-2 shadow-inner drop-shadow-md">
+      <div className="grid grid-cols-7 gap-2">
+        {Array(columns * rows)
+          .fill(null)
+          .map((item, i) => (
+            <>
+              <Circle
+                key={i}
+                variant={data[i]}
+                onClick={() => handleTurn(i % columns)}
+              ></Circle>
+            </>
+          ))}
+      </div>
+    </div>
+  );
+};
+
+const Game = () => {
+  const [board, setBoard] = React.useState<Array<"red" | "yellow" | undefined>>(
+    Array(rows * columns).fill(undefined),
+  );
+  const [player, setPlayer] = React.useState<"red" | "yellow">("red");
+
+  const handleTurn = (column: number) => {
+    const newBoard = [...board];
+    // check the column from the bottom up
+    for (let i = rows - 1; i >= 0; i -= 1) {
+      if (newBoard[i * columns + column] == null) {
+        newBoard[i * columns + column] = player;
+        break;
+      }
+    }
+    setBoard(newBoard);
+    setPlayer(player === "red" ? "yellow" : "red");
+  };
+
+  return <Board data={board} handleTurn={handleTurn} />;
+};
 
 export default function Home() {
   return (
     <>
       <Head>
         <title>Score Four</title>
-        <meta name="description" content="First attempt at using create-t3-app, tailwind" />
+        <meta
+          name="description"
+          content="First attempt at using create-t3-app, tailwind"
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#fff] to-[#ccc]">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
-          <h1 className="text-5xl font-extrabold tracking-tight text-black sm:text-[5rem]">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100">
+        <div className="container flex flex-col items-center justify-center px-4 py-12">
+          <h1 className="text-5xl font-extrabold tracking-tight text-slate-700 sm:text-[5rem]">
             Score Four
           </h1>
         </div>
+        <Game />
       </main>
     </>
   );
