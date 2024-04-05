@@ -165,7 +165,7 @@ const Game = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8">
+    <div className="flex flex-col items-center gap-8">
       {winner != null ? (
         winner === "draw" ? (
           <div>It&apos;s a draw!</div>
@@ -194,7 +194,7 @@ export default function Home() {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-white to-gray-100">
+      <main className="flex min-h-screen flex-col items-center justify-start bg-gradient-to-b from-white to-gray-100">
         <div className="container flex flex-col items-center justify-center px-4 py-12">
           <h1 className="text-5xl font-extrabold tracking-tight text-slate-700 sm:text-[5rem]">
             Score Four
