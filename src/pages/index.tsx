@@ -80,9 +80,11 @@ const Game = () => {
 
     const newBoard = [...board];
     // check the column from the bottom up
+    let validMove = false;
     for (let i = rows - 1; i >= 0; i -= 1) {
       if (newBoard[i * columns + column] == null) {
         newBoard[i * columns + column] = player;
+        validMove = true;
         break;
       }
     }
@@ -150,8 +152,10 @@ const Game = () => {
       }
     }
 
-    setBoard(newBoard);
-    setPlayer(player === "red" ? "yellow" : "red");
+    if (validMove) {
+      setBoard(newBoard);
+      setPlayer(player === "red" ? "yellow" : "red");
+    }
   };
 
   const handleReset = () => {
