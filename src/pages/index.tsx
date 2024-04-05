@@ -11,30 +11,31 @@ interface CircleProps {
 
 const Circle = (props: CircleProps) => {
   const { onClick, variant = "empty" } = props;
+
+  const colorClasses = React.useMemo(() => {
+    if (variant === "red") {
+      return "border-red-500 bg-red-700 text-red-500";
+    }
+    if (variant === "yellow") {
+      return "border-amber-200 bg-amber-400 text-amber-200";
+    }
+    if (variant === "win") {
+      return "border-green-500 bg-green-600 text-green-500";
+    }
+    return "border-gray-200 bg-white";
+  }, [variant]);
+
   return (
     <div
       className="min-h-16 min-w-16 origin-center rounded-full border-4 border-solid border-blue-500 bg-white text-center text-lg  shadow-lg"
       onClick={onClick}
       role="button"
     >
-      {variant === "red" && (
-        <div className="flex flex min-h-16 items-center justify-center rounded-full border-4 border-red-500 bg-red-700 text-red-500">
-          4
-        </div>
-      )}
-      {variant === "yellow" && (
-        <div className="flex flex min-h-16 items-center justify-center rounded-full border-4 border-amber-200 bg-amber-400 text-amber-200">
-          4
-        </div>
-      )}
-      {variant === "win" && (
-        <div className="flex min-h-16 items-center justify-center rounded-full border-4 border-green-500 bg-green-600 text-green-500">
-          4
-        </div>
-      )}
-      {variant === "empty" && (
-        <div className="quickmarch flex min-h-16 rounded-full border-4 border-gray-200 bg-white"></div>
-      )}
+      <div
+        className={`flex min-h-16 min-w-16 items-center justify-center rounded-full border-4 ${colorClasses}`}
+      >
+        {variant !== "empty" ? "4" : null}
+      </div>
     </div>
   );
 };
