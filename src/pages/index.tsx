@@ -102,6 +102,7 @@ const Game = () => {
           newBoard[i * columns + j + 1] = "win";
           newBoard[i * columns + j + 2] = "win";
           newBoard[i * columns + j + 3] = "win";
+          setWinner(player);
         }
       }
     }
