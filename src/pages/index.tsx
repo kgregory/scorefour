@@ -89,6 +89,8 @@ const Game = () => {
       }
     }
 
+    let isWinningMove = false;
+
     // row check
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < columns - 3; j++) {
@@ -102,7 +104,7 @@ const Game = () => {
           newBoard[i * columns + j + 1] = "win";
           newBoard[i * columns + j + 2] = "win";
           newBoard[i * columns + j + 3] = "win";
-          setWinner(player);
+          isWinningMove = true;
         }
       }
     }
@@ -120,7 +122,7 @@ const Game = () => {
           newBoard[(i + 1) * columns + j] = "win";
           newBoard[(i + 2) * columns + j] = "win";
           newBoard[(i + 3) * columns + j] = "win";
-          setWinner(player);
+          isWinningMove = true;
         }
       }
 
@@ -136,7 +138,7 @@ const Game = () => {
           newBoard[(i + 1) * columns + j + 1] = "win";
           newBoard[(i + 2) * columns + j + 2] = "win";
           newBoard[(i + 3) * columns + j + 3] = "win";
-          setWinner(player);
+          isWinningMove = true;
         }
         if (
           newBoard[i * columns + j + 3] === player &&
@@ -148,12 +150,21 @@ const Game = () => {
           newBoard[(i + 1) * columns + j + 2] = "win";
           newBoard[(i + 2) * columns + j + 1] = "win";
           newBoard[(i + 3) * columns + j] = "win";
-          setWinner(player);
+          isWinningMove = true;
         }
       }
     }
 
     if (validMove) {
+      setWinner((winner) => {
+        if (isWinningMove) {
+          return player;
+        }
+        if (newBoard.every((item) => item != null)) {
+          return "draw";
+        }
+        return winner;
+      });
       setBoard(newBoard);
       setPlayer(player === "red" ? "yellow" : "red");
     }
