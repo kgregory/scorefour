@@ -53,13 +53,11 @@ const Board = (props: BoardProps) => {
         {Array(columns * rows)
           .fill(null)
           .map((item, i) => (
-            <>
-              <Circle
-                key={i}
-                variant={data[i]}
-                onClick={() => handleTurn(i % columns)}
-              ></Circle>
-            </>
+            <Circle
+              key={i}
+              variant={data[i]}
+              onClick={() => handleTurn(i % columns)}
+            ></Circle>
           ))}
       </div>
     </div>
