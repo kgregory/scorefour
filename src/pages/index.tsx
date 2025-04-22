@@ -255,6 +255,7 @@ const Circle = (props: CircleProps) => {
       className="min-h-8 min-w-8 origin-center rounded-full border-4 border-solid border-blue-500 bg-white text-center text-lg shadow-lg sm:min-h-16  sm:min-w-16"
       onClick={onClick}
       role="button"
+      aria-label={variant !== "empty" ? variant : "empty slot"}
     >
       <div
         className={`flex size-full items-center justify-center rounded-full border-4 ${colorClasses}`}
