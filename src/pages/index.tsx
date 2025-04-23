@@ -12,7 +12,10 @@ interface Board<TValue = number> {
 
 type Direction = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw";
 
-const adjacentCellIndexes = new Map();
+const adjacentCellIndexes = new Map<
+  string,
+  Record<Direction, number | undefined>
+>();
 
 /** get the indexes of the adjacent cells in each direction, where applicable and memoize using a map keyed by the cell */
 const getAdjacentCellIndexes = <TValue,>(
@@ -24,8 +27,9 @@ const getAdjacentCellIndexes = <TValue,>(
   // key considers board-size
   const cellKey = `${cell}_${rows}_${columns}`;
 
-  if (adjacentCellIndexes.has(cellKey)) {
-    return adjacentCellIndexes.get(cellKey);
+  const cached = adjacentCellIndexes.get(cellKey);
+  if (cached != null) {
+    return cached;
   }
 
   // there might not be an adjacent cell in all directions
@@ -49,7 +53,7 @@ const getAdjacentCellIndexes = <TValue,>(
   const se = s + 1;
   const sw = s - 1;
 
-  adjacentCellIndexes.set(cellKey, {
+  const result = {
     n: hasN ? n : undefined,
     w: hasW ? w : undefined,
     e: hasE ? e : undefined,
@@ -58,9 +62,11 @@ const getAdjacentCellIndexes = <TValue,>(
     nw: hasNW ? nw : undefined,
     se: hasSE ? se : undefined,
     sw: hasSW ? sw : undefined,
-  });
+  };
 
-  return adjacentCellIndexes.get(cellKey);
+  adjacentCellIndexes.set(cellKey, result);
+
+  return result;
 };
 
 /** get cell index for each adjacent position, by direction */
@@ -252,7 +258,7 @@ const Circle = (props: CircleProps) => {
 
   return (
     <div
-      className="min-h-8 min-w-8 origin-center rounded-full border-4 border-solid border-blue-500 bg-white text-center text-lg shadow-lg sm:min-h-16  sm:min-w-16"
+      className="min-h-8 min-w-8 origin-center rounded-full border-4 border-solid border-blue-500 bg-white text-center text-lg shadow-lg sm:min-h-16 sm:min-w-16"
       onClick={onClick}
       role="button"
       aria-label={variant !== "empty" ? variant : "empty slot"}
