@@ -272,16 +272,16 @@ const useGameState = () => {
 interface CircleProps {
   onClick?: () => void;
   variant?: "empty" | "red" | "yellow" | "purple" | "win";
-  emphasize?: boolean;
-  compact?: boolean;
+  isEmphasized?: boolean;
+  isDense?: boolean;
 }
 
 const Circle = (props: CircleProps) => {
   const {
     onClick,
     variant = "empty",
-    emphasize = true,
-    compact = false,
+    isEmphasized = true,
+    isDense = false,
   } = props;
 
   const colorClasses = useMemo(() => {
@@ -302,11 +302,17 @@ const Circle = (props: CircleProps) => {
 
   return (
     <div
-      className={`min-h-8 min-w-8 origin-center rounded-full ${emphasize ? "border-4 border-solid border-blue-500" : ""} bg-white text-center text-lg shadow-lg ${compact ? "" : "sm:min-h-16 sm:min-w-16"}`}
+      className={`min-h-8 min-w-8 origin-center rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} bg-white text-center text-lg shadow-lg ${isDense ? "" : "sm:min-h-16 sm:min-w-16"}`}
       {...(onClick != null
         ? {
             onClick,
             role: "button",
+            tabIndex: 0,
+            onKeyDown: (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                onClick();
+              }
+            },
           }
         : {})}
       aria-label={variant !== "empty" ? variant : "empty slot"}
@@ -314,7 +320,7 @@ const Circle = (props: CircleProps) => {
       <div
         className={`flex size-full items-center justify-center rounded-full border-4 ${colorClasses}`}
       >
-        {compact ? null : variant !== "empty" ? "4" : <>&nbsp;</>}
+        {isDense ? null : variant !== "empty" ? "4" : <>&nbsp;</>}
       </div>
     </div>
   );
@@ -368,17 +374,21 @@ const GameStatus = (props: GameStatusProps) => {
           className="grid gap-4"
           style={{ gridTemplateColumns: `repeat(${players}, 1fr)` }}
         >
-          <Circle variant="red" emphasize={currentPlayer === "red"} compact />
+          <Circle
+            variant="red"
+            isEmphasized={currentPlayer === "red"}
+            isDense
+          />
           <Circle
             variant="yellow"
-            emphasize={currentPlayer === "yellow"}
-            compact
+            isEmphasized={currentPlayer === "yellow"}
+            isDense
           />
           {players === 3 && (
             <Circle
               variant="purple"
-              emphasize={currentPlayer === "purple"}
-              compact
+              isEmphasized={currentPlayer === "purple"}
+              isDense
             />
           )}
         </div>
