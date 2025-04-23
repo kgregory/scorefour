@@ -359,11 +359,10 @@ const Board = (props: BoardProps) => {
   );
 };
 
-interface GameStatusProps {
-  currentPlayer: ReturnType<typeof useGameState>["currentPlayer"];
-  players: number;
-  winner: ReturnType<typeof useGameState>["winner"];
-}
+type GameStatusProps = Pick<
+  ReturnType<typeof useGameState>,
+  "currentPlayer" | "winner" | "players"
+>;
 
 const GameStatus = (props: GameStatusProps) => {
   const { currentPlayer, players, winner } = props;
@@ -408,71 +407,83 @@ const GameStatus = (props: GameStatusProps) => {
   );
 };
 
-interface GameSettingsProps {
-  players: number;
-  columns: number;
-  rows: number;
-  reconfigure: ReturnType<typeof useGameState>["reconfigure"];
-}
+type GameSettingsProps = Pick<
+  ReturnType<typeof useGameState>,
+  "players" | "columns" | "rows" | "reconfigure" | "reset"
+>;
 
 const GameSettings = (props: GameSettingsProps) => {
-  const { players, columns, rows, reconfigure } = props;
+  const { players, columns, rows, reconfigure, reset } = props;
+  const [settingsVisible, setSettingsVisible] = useState(false);
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex gap-2">
-        <label htmlFor="players">Players:</label>
-        <select
-          id="players"
-          value={players}
-          onChange={(e) => {
-            const players = parseInt(e.target.value, 10) as 2 | 3;
-            reconfigure({ players });
-          }}
-        >
-          <option value={2}>2</option>
-          <option value={3}>3</option>
-        </select>
+    <>
+      <div className="flex items-center gap-2">
+        <button onClick={reset} className="btn">
+          Reset
+        </button>
+        <span className="text-gray-300">|</span>
+        <button onClick={() => setSettingsVisible((v) => !v)}>
+          Settings {settingsVisible ? " -" : " +"}
+        </button>
       </div>
-      <span className="text-gray-300">|</span>
-      <div className="flex gap-2">
-        <label htmlFor="columns">Columns:</label>
-        <select
-          id="columns"
-          value={columns}
-          onChange={(e) => {
-            const columns = parseInt(e.target.value, 10) as 2 | 3;
-            reconfigure({ columns });
-          }}
-        >
-          <option value={4}>4</option>
-          <option value={5}>5</option>
-          <option value={6}>6</option>
-          <option value={7}>7</option>
-          <option value={8}>8</option>
-          <option value={9}>9</option>
-        </select>
-      </div>
-      <span className="text-gray-300">|</span>
-      <div className="flex gap-2">
-        <label htmlFor="rows">Rows:</label>
-        <select
-          id="rows"
-          value={rows}
-          onChange={(e) => {
-            const rows = parseInt(e.target.value, 10) as 2 | 3;
-            reconfigure({ rows });
-          }}
-        >
-          <option value={4}>4</option>
-          <option value={5}>5</option>
-          <option value={6}>6</option>
-          <option value={7}>7</option>
-          <option value={8}>8</option>
-          <option value={9}>9</option>
-        </select>
-      </div>
-    </div>
+      {settingsVisible && (
+        <div className="flex items-center gap-2">
+          <div className="flex gap-2">
+            <label htmlFor="players">Players:</label>
+            <select
+              id="players"
+              value={players}
+              onChange={(e) => {
+                const players = parseInt(e.target.value, 10) as 2 | 3;
+                reconfigure({ players });
+              }}
+            >
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+            </select>
+          </div>
+          <span className="text-gray-300">|</span>
+          <div className="flex gap-2">
+            <label htmlFor="columns">Columns:</label>
+            <select
+              id="columns"
+              value={columns}
+              onChange={(e) => {
+                const columns = parseInt(e.target.value, 10) as 2 | 3;
+                reconfigure({ columns });
+              }}
+            >
+              <option value={4}>4</option>
+              <option value={5}>5</option>
+              <option value={6}>6</option>
+              <option value={7}>7</option>
+              <option value={8}>8</option>
+              <option value={9}>9</option>
+            </select>
+          </div>
+          <span className="text-gray-300">|</span>
+          <div className="flex gap-2">
+            <label htmlFor="rows">Rows:</label>
+            <select
+              id="rows"
+              value={rows}
+              onChange={(e) => {
+                const rows = parseInt(e.target.value, 10) as 2 | 3;
+                reconfigure({ rows });
+              }}
+            >
+              <option value={4}>4</option>
+              <option value={5}>5</option>
+              <option value={6}>6</option>
+              <option value={7}>7</option>
+              <option value={8}>8</option>
+              <option value={9}>9</option>
+            </select>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -489,8 +500,6 @@ const Game = () => {
     reset,
   } = useGameState();
 
-  const [settingsVisible, setSettingsVisible] = useState(false);
-
   return (
     <div className="flex flex-col items-center gap-8">
       <GameStatus
@@ -504,23 +513,13 @@ const Game = () => {
         values={values}
         handleTurn={update}
       />
-      <div className="flex items-center gap-2">
-        <button onClick={reset} className="btn">
-          Reset
-        </button>
-        <span className="text-gray-300">|</span>
-        <button onClick={() => setSettingsVisible((v) => !v)}>
-          Settings {settingsVisible ? " -" : " +"}
-        </button>
-      </div>
-      {settingsVisible && (
-        <GameSettings
-          players={players}
-          columns={columns}
-          rows={rows}
-          reconfigure={reconfigure}
-        />
-      )}
+      <GameSettings
+        players={players}
+        columns={columns}
+        rows={rows}
+        reconfigure={reconfigure}
+        reset={reset}
+      />
     </div>
   );
 };
