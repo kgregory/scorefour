@@ -271,7 +271,7 @@ const useGameState = () => {
 
 interface CircleProps {
   onClick?: () => void;
-  variant?: "empty" | "red" | "yellow" | "purple" | "win";
+  color?: "empty" | "red" | "yellow" | "purple" | "win";
   isEmphasized?: boolean;
   isDense?: boolean;
 }
@@ -279,26 +279,29 @@ interface CircleProps {
 const Circle = (props: CircleProps) => {
   const {
     onClick,
-    variant = "empty",
+    color = "empty",
     isEmphasized = true,
     isDense = false,
   } = props;
 
   const colorClasses = useMemo(() => {
-    if (variant === "red") {
+    if (color === "red") {
       return "border-red-500 bg-red-700 text-red-500";
     }
-    if (variant === "yellow") {
+    if (color === "yellow") {
       return "border-amber-200 bg-amber-400 text-amber-200";
     }
-    if (variant === "purple") {
+    if (color === "purple") {
       return "border-purple-500 bg-purple-700 text-purple-500";
     }
-    if (variant === "win") {
+    if (color === "win") {
       return "border-green-500 bg-green-600 text-green-500";
     }
     return "border-gray-200 bg-white";
-  }, [variant]);
+  }, [color]);
+
+  // non-empty circles are not clickable
+  const isDisabled = color !== "empty";
 
   return (
     <div
@@ -307,8 +310,8 @@ const Circle = (props: CircleProps) => {
         ? {
             onClick,
             role: "button",
-            tabIndex: variant === "empty" ? 0 : -1,
-            "aria-disabled": variant !== "empty",
+            tabIndex: isDisabled ? -1 : 0,
+            "aria-disabled": isDisabled,
             onKeyDown: (e) => {
               if (e.key === "Enter" || e.key === " ") {
                 onClick();
@@ -316,12 +319,12 @@ const Circle = (props: CircleProps) => {
             },
           }
         : {})}
-      aria-label={variant !== "empty" ? variant : "empty slot"}
+      aria-label={color !== "empty" ? color : "empty slot"}
     >
       <div
         className={`flex size-full items-center justify-center rounded-full border-4 ${colorClasses}`}
       >
-        {isDense ? null : variant !== "empty" ? "4" : <>&nbsp;</>}
+        {isDense ? null : color !== "empty" ? "4" : <>&nbsp;</>}
       </div>
     </div>
   );
@@ -347,7 +350,7 @@ const Board = (props: BoardProps) => {
           .map((item, i) => (
             <Circle
               key={i}
-              variant={values[i]}
+              color={values[i]}
               onClick={() => handleTurn(i % columns)}
             ></Circle>
           ))}
@@ -375,19 +378,15 @@ const GameStatus = (props: GameStatusProps) => {
           className="grid gap-4"
           style={{ gridTemplateColumns: `repeat(${players}, 1fr)` }}
         >
+          <Circle color="red" isEmphasized={currentPlayer === "red"} isDense />
           <Circle
-            variant="red"
-            isEmphasized={currentPlayer === "red"}
-            isDense
-          />
-          <Circle
-            variant="yellow"
+            color="yellow"
             isEmphasized={currentPlayer === "yellow"}
             isDense
           />
           {players === 3 && (
             <Circle
-              variant="purple"
+              color="purple"
               isEmphasized={currentPlayer === "purple"}
               isDense
             />
