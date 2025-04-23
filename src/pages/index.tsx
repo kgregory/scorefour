@@ -1,8 +1,5 @@
 import Head from "next/head";
-import * as React from "react";
-
-const rows = 6;
-const columns = 7;
+import { useMemo, useState } from "react";
 
 interface Board<TValue = number> {
   values: Array<TValue>;
@@ -89,18 +86,20 @@ const getAdjacentCells = <TValue,>(cell: number, board: Board<TValue>) => {
   };
 };
 
+interface CheckDirectionParams<TValue> {
+  cell: number | undefined;
+  value: TValue;
+  direction: Direction;
+  board: Board<TValue>;
+}
+
 /** starting from the specified cell index, continuing in the specified direction, return an array of indexes for continuously matching cells */
 const checkDirection = <TValue,>({
   cell,
   value,
   direction,
   board,
-}: {
-  cell: number | undefined;
-  value: TValue;
-  direction: Direction;
-  board: Board<TValue>;
-}): number[] => {
+}: CheckDirectionParams<TValue>): number[] => {
   const { values } = board;
 
   if (cell == null || values[cell] !== value) {
@@ -164,21 +163,47 @@ const checkCell = <TValue,>(cell: number, board: Board<TValue>) => {
   };
 };
 
-const useGameState = () => {
-  const [board, setBoard] = React.useState<
-    Array<"red" | "yellow" | "win" | undefined>
-  >(Array(rows * columns).fill(undefined));
-  const [player, setPlayer] = React.useState<"red" | "yellow">("red");
-  const [winner, setWinner] = React.useState<"red" | "yellow" | "draw">();
+type Player = "red" | "yellow" | "purple";
+type BoardValue = Player | "win" | undefined;
 
-  return React.useMemo(
+const useGameState = () => {
+  const [players, setPlayers] = useState<2 | 3>(2);
+  const [columns, setColumns] = useState(7);
+  const [rows, setRows] = useState(6);
+  const [values, setValues] = useState<Array<BoardValue>>(
+    Array<BoardValue>(rows * columns).fill(undefined),
+  );
+  const [currentPlayer, setCurrentPlayer] = useState<Player>("red");
+  const [winner, setWinner] = useState<Player | "draw">();
+
+  return useMemo(
     () => ({
-      board,
-      player,
+      players,
+      rows,
+      columns,
+      values,
+      currentPlayer,
       winner,
+      reconfigure: (options: {
+        players?: 2 | 3;
+        columns?: number;
+        rows?: number;
+      }) => {
+        const newPlayers = options.players ?? players;
+        const newColumns = options.columns ?? columns;
+        const newRows = options.rows ?? rows;
+        setColumns(newColumns);
+        setRows(newRows);
+        setPlayers(newPlayers);
+        if (newPlayers != players || newColumns != columns || newRows != rows) {
+          setValues(Array<BoardValue>(newRows * newColumns).fill(undefined));
+          setCurrentPlayer("red");
+          setWinner(undefined);
+        }
+      },
       reset: () => {
-        setBoard(Array(rows * columns).fill(undefined));
-        setPlayer("red");
+        setValues(Array<BoardValue>(rows * columns).fill(undefined));
+        setCurrentPlayer("red");
         setWinner(undefined);
       },
       update: (column: number) => {
@@ -187,13 +212,13 @@ const useGameState = () => {
           return;
         }
 
-        const newBoard = [...board];
+        const newValues = [...values];
 
         // check the column from the bottom up
         let cell = undefined;
         for (let i = rows - 1; i >= 0; i -= 1) {
-          if (newBoard[i * columns + column] == null) {
-            newBoard[i * columns + column] = player;
+          if (newValues[i * columns + column] == null) {
+            newValues[i * columns + column] = currentPlayer;
             cell = i * columns + column;
             break;
           }
@@ -206,49 +231,68 @@ const useGameState = () => {
 
         // filter the adjoining cells by the directions that have at least 4 in a row
         const winningCells = Object.values(
-          checkCell(cell, { columns, rows, values: newBoard }),
+          checkCell(cell, { columns, rows, values: newValues }),
         )
           .filter((direction) => direction.length > 3)
           .flat();
 
         // mark winning cells, if any
         winningCells.forEach((i) => {
-          newBoard[i] = "win";
+          newValues[i] = "win";
         });
 
-        setWinner((winner) => {
-          if (winningCells.length > 0) {
-            return player;
-          }
-          if (newBoard.every((item) => item != null)) {
-            // no winner and we're out of moves
-            return "draw";
-          }
-          return winner;
-        });
+        if (winningCells.length > 0) {
+          setWinner(currentPlayer);
+        } else if (newValues.every((value) => value != null)) {
+          // no winner and we're out of moves
+          setWinner("draw");
+        } else {
+          setCurrentPlayer((player) => {
+            if (players === 2) {
+              return player === "red" ? "yellow" : "red";
+            }
+            // three players
+            if (player === "red") {
+              return "yellow";
+            }
+            if (player === "yellow") {
+              return "purple";
+            }
+            return "red";
+          });
+        }
 
-        setBoard(newBoard);
-        setPlayer(player === "red" ? "yellow" : "red");
+        setValues(newValues);
       },
     }),
-    [board, player, winner],
+    [players, rows, columns, values, currentPlayer, winner],
   );
 };
 
 interface CircleProps {
-  onClick: () => void;
-  variant?: "empty" | "red" | "yellow" | "win";
+  onClick?: () => void;
+  variant?: "empty" | "red" | "yellow" | "purple" | "win";
+  emphasize?: boolean;
+  compact?: boolean;
 }
 
 const Circle = (props: CircleProps) => {
-  const { onClick, variant = "empty" } = props;
+  const {
+    onClick,
+    variant = "empty",
+    emphasize = true,
+    compact = false,
+  } = props;
 
-  const colorClasses = React.useMemo(() => {
+  const colorClasses = useMemo(() => {
     if (variant === "red") {
       return "border-red-500 bg-red-700 text-red-500";
     }
     if (variant === "yellow") {
       return "border-amber-200 bg-amber-400 text-amber-200";
+    }
+    if (variant === "purple") {
+      return "border-purple-500 bg-purple-700 text-purple-500";
     }
     if (variant === "win") {
       return "border-green-500 bg-green-600 text-green-500";
@@ -258,36 +302,45 @@ const Circle = (props: CircleProps) => {
 
   return (
     <div
-      className="min-h-8 min-w-8 origin-center rounded-full border-4 border-solid border-blue-500 bg-white text-center text-lg shadow-lg sm:min-h-16 sm:min-w-16"
-      onClick={onClick}
-      role="button"
+      className={`min-h-8 min-w-8 origin-center rounded-full ${emphasize ? "border-4 border-solid border-blue-500" : ""} bg-white text-center text-lg shadow-lg ${compact ? "" : "sm:min-h-16 sm:min-w-16"}`}
+      {...(onClick != null
+        ? {
+            onClick,
+            role: "button",
+          }
+        : {})}
       aria-label={variant !== "empty" ? variant : "empty slot"}
     >
       <div
         className={`flex size-full items-center justify-center rounded-full border-4 ${colorClasses}`}
       >
-        {variant !== "empty" ? "4" : <>&nbsp;</>}
+        {compact ? null : variant !== "empty" ? "4" : <>&nbsp;</>}
       </div>
     </div>
   );
 };
 
 interface BoardProps {
-  data: Array<"red" | "yellow" | "win" | undefined>;
+  rows: number;
+  columns: number;
+  values: Array<BoardValue>;
   handleTurn: (column: number) => void;
 }
 
 const Board = (props: BoardProps) => {
-  const { data, handleTurn } = props;
+  const { rows, columns, values, handleTurn } = props;
   return (
     <div className="min-w-96 border-8 border-solid border-blue-600 bg-gradient-to-b from-blue-700 to-blue-800 p-2 shadow-inner drop-shadow-md">
-      <div className="grid grid-cols-7 gap-2">
+      <div
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+      >
         {Array(columns * rows)
           .fill(null)
           .map((item, i) => (
             <Circle
               key={i}
-              variant={data[i]}
+              variant={values[i]}
               onClick={() => handleTurn(i % columns)}
             ></Circle>
           ))}
@@ -296,24 +349,168 @@ const Board = (props: BoardProps) => {
   );
 };
 
+interface GameStatusProps {
+  currentPlayer: ReturnType<typeof useGameState>["currentPlayer"];
+  players: number;
+  winner: ReturnType<typeof useGameState>["winner"];
+}
+
+const GameStatus = (props: GameStatusProps) => {
+  const { currentPlayer, players, winner } = props;
+
+  return (
+    <div className="container flex flex-col gap-2 px-4 pt-8">
+      <div className="container flex items-center justify-between">
+        <h1 className="grow-1 flex text-4xl font-extrabold tracking-tight text-slate-700">
+          Score Four
+        </h1>
+        <div
+          className="grid gap-4"
+          style={{ gridTemplateColumns: `repeat(${players}, 1fr)` }}
+        >
+          <Circle variant="red" emphasize={currentPlayer === "red"} compact />
+          <Circle
+            variant="yellow"
+            emphasize={currentPlayer === "yellow"}
+            compact
+          />
+          {players === 3 && (
+            <Circle
+              variant="purple"
+              emphasize={currentPlayer === "purple"}
+              compact
+            />
+          )}
+        </div>
+      </div>
+      <div className="flex justify-end">
+        {winner != null ? (
+          winner === "draw" ? (
+            <div>It&apos;s a draw!</div>
+          ) : (
+            <div className="capitalize">{winner} wins!</div>
+          )
+        ) : (
+          <div>It&apos;s {currentPlayer}&apos;s turn</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface GameSettingsProps {
+  players: number;
+  columns: number;
+  rows: number;
+  reconfigure: ReturnType<typeof useGameState>["reconfigure"];
+}
+
+const GameSettings = (props: GameSettingsProps) => {
+  const { players, columns, rows, reconfigure } = props;
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex gap-2">
+        <label htmlFor="players">Players:</label>
+        <select
+          id="players"
+          value={players}
+          onChange={(e) => {
+            const players = parseInt(e.target.value, 10) as 2 | 3;
+            reconfigure({ players });
+          }}
+        >
+          <option value={2}>2</option>
+          <option value={3}>3</option>
+        </select>
+      </div>
+      <span className="text-gray-300">|</span>
+      <div className="flex gap-2">
+        <label htmlFor="columns">Columns:</label>
+        <select
+          id="columns"
+          value={columns}
+          onChange={(e) => {
+            const columns = parseInt(e.target.value, 10) as 2 | 3;
+            reconfigure({ columns });
+          }}
+        >
+          <option value={4}>4</option>
+          <option value={5}>5</option>
+          <option value={6}>6</option>
+          <option value={7}>7</option>
+          <option value={8}>8</option>
+          <option value={9}>9</option>
+        </select>
+      </div>
+      <span className="text-gray-300">|</span>
+      <div className="flex gap-2">
+        <label htmlFor="rows">Rows:</label>
+        <select
+          id="rows"
+          value={rows}
+          onChange={(e) => {
+            const rows = parseInt(e.target.value, 10) as 2 | 3;
+            reconfigure({ rows });
+          }}
+        >
+          <option value={4}>4</option>
+          <option value={5}>5</option>
+          <option value={6}>6</option>
+          <option value={7}>7</option>
+          <option value={8}>8</option>
+          <option value={9}>9</option>
+        </select>
+      </div>
+    </div>
+  );
+};
+
 const Game = () => {
-  const { board, player, winner, update, reset } = useGameState();
+  const {
+    players,
+    rows,
+    columns,
+    values,
+    currentPlayer,
+    winner,
+    update,
+    reconfigure,
+    reset,
+  } = useGameState();
+
+  const [settingsVisible, setSettingsVisible] = useState(false);
 
   return (
     <div className="flex flex-col items-center gap-8">
-      {winner != null ? (
-        winner === "draw" ? (
-          <div>It&apos;s a draw!</div>
-        ) : (
-          <div className="capitalize">{winner} wins!</div>
-        )
-      ) : (
-        <div>It&apos;s {player}&apos;s turn</div>
+      <GameStatus
+        currentPlayer={currentPlayer}
+        players={players}
+        winner={winner}
+      />
+      <Board
+        rows={rows}
+        columns={columns}
+        values={values}
+        handleTurn={update}
+      />
+      <div className="flex items-center gap-2">
+        <button onClick={reset} className="btn">
+          Reset
+        </button>
+        <span className="text-gray-300">|</span>
+        <button onClick={() => setSettingsVisible((v) => !v)}>
+          Settings {settingsVisible ? " -" : " +"}
+        </button>
+      </div>
+      {settingsVisible && (
+        <GameSettings
+          players={players}
+          columns={columns}
+          rows={rows}
+          reconfigure={reconfigure}
+        />
       )}
-      <button onClick={reset} className="btn">
-        Reset
-      </button>
-      <Board data={board} handleTurn={update} />
     </div>
   );
 };
@@ -330,11 +527,6 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-start bg-gradient-to-b from-white to-gray-100">
-        <div className="container flex flex-col items-center justify-center px-4 py-12">
-          <h1 className="text-5xl font-extrabold tracking-tight text-slate-700 sm:text-[5rem]">
-            Score Four
-          </h1>
-        </div>
         <Game />
       </main>
     </>
