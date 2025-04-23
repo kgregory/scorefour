@@ -307,7 +307,8 @@ const Circle = (props: CircleProps) => {
         ? {
             onClick,
             role: "button",
-            tabIndex: 0,
+            tabIndex: variant === "empty" ? 0 : -1,
+            "aria-disabled": variant !== "empty",
             onKeyDown: (e) => {
               if (e.key === "Enter" || e.key === " ") {
                 onClick();
