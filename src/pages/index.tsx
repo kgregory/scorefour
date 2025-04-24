@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface Board<TValue = number> {
   values: Array<TValue>;
@@ -163,17 +163,140 @@ const checkCell = <TValue,>(cell: number, board: Board<TValue>) => {
   };
 };
 
-type Player = "red" | "yellow" | "purple";
+/** get outcomes for a proposed move, returns a set of the continuous lengths of the specified value in any direction */
+const getOutcomes = <TValue,>(
+  cell: number,
+  newValue: TValue,
+  board: Board<TValue>,
+) => {
+  const { columns, rows, values } = board;
+
+  // create a copy of the provided values and set the specified cell to its new value
+  const checkedValues = [...values];
+  checkedValues[cell] = newValue;
+  const checkedResults = checkCell(cell, {
+    rows,
+    columns,
+    values: checkedValues,
+  });
+
+  return Object.values(checkedResults).reduce((acc, direction) => {
+    acc.add(direction.length);
+    return acc;
+  }, new Set<number>());
+};
+
+/** get best of all available moves, determined by arbitrary scoring rules */
+const getBestMove = <TValue,>(
+  playerValue: TValue,
+  opponentValue: TValue,
+  board: Board<TValue>,
+) => {
+  const { columns, rows, values } = board;
+
+  // get the available moves (columns with an empty cell)
+  const validColumns: number[] = [];
+  for (let c = 0; c < columns; c += 1) {
+    if (values[c] == null) {
+      validColumns.push(c);
+    }
+  }
+
+  const scoredMoves = validColumns
+    .map<[number, number]>((column) => {
+      // get the index of the cell that would be filled
+      let cell = undefined;
+      for (let i = rows - 1; i >= 0; i -= 1) {
+        if (values[i * columns + column] == null) {
+          cell = i * columns + column;
+          break;
+        }
+      }
+
+      // not likely, but I don't feel like asserting non-null on this below
+      if (cell == null) {
+        return [column, 0];
+      }
+
+      // decide how this space would benefit the other player and the current player
+      const opponentOutcomes = getOutcomes(cell, opponentValue, board);
+      const playerOutcomes = getOutcomes(cell, playerValue, board);
+
+      if (playerOutcomes.has(4)) {
+        // player wins with this move
+        return [column, 1000];
+      }
+      if (opponentOutcomes.has(4)) {
+        // opponent wins with this move
+        return [column, 900];
+      }
+      if (playerOutcomes.has(3)) {
+        // player will have 3 in a row
+        return [column, 100];
+      }
+      if (opponentOutcomes.has(3)) {
+        // opponent will have 3 in a row
+        return [column, 50];
+      }
+      if (playerOutcomes.has(2)) {
+        // player will have 2 in a row
+        return [column, 10];
+      }
+      if (opponentOutcomes.has(2)) {
+        // opponent will have 2 in a row
+        return [column, 5];
+      }
+      return [column, 1];
+    })
+    .sort((a, b) => b[1] - a[1]);
+
+  return scoredMoves.length > 0 ? scoredMoves[0] : undefined;
+};
+
+const PLAYER_ONE = "red";
+const PLAYER_TWO = "yellow";
+const PLAYER_THREE = "purple";
+
+type Players = 1 | 2 | 3;
+type Player = typeof PLAYER_ONE | typeof PLAYER_TWO | typeof PLAYER_THREE;
 type BoardValue = Player | "win" | undefined;
 
+type UseOpponentParams = Pick<
+  ReturnType<typeof useGameState>,
+  "players" | "rows" | "columns" | "currentPlayer" | "values" | "update"
+>;
+
+const useOpponent = (params: UseOpponentParams) => {
+  const { players, rows, columns, currentPlayer, values, update } = params;
+
+  // this effect is used to simulate an AI player when there is only one player
+  // it will review the available moves and pick the one that scores the highest according to its rules
+  useEffect(() => {
+    if (players === 1 && currentPlayer === PLAYER_TWO) {
+      const timeout = setTimeout(() => {
+        const [column] =
+          getBestMove(currentPlayer, PLAYER_ONE, { rows, columns, values }) ??
+          [];
+
+        if (column != null) {
+          update(column);
+        }
+      }, 500);
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [columns, currentPlayer, players, rows, update, values]);
+};
+
 const useGameState = () => {
-  const [players, setPlayers] = useState<2 | 3>(2);
+  const [players, setPlayers] = useState<Players>(2);
   const [columns, setColumns] = useState(7);
   const [rows, setRows] = useState(6);
   const [values, setValues] = useState<Array<BoardValue>>(
     Array<BoardValue>(rows * columns).fill(undefined),
   );
-  const [currentPlayer, setCurrentPlayer] = useState<Player>("red");
+  const [currentPlayer, setCurrentPlayer] = useState<Player>(PLAYER_ONE);
   const [winner, setWinner] = useState<Player | "draw">();
 
   return useMemo(
@@ -185,7 +308,7 @@ const useGameState = () => {
       currentPlayer,
       winner,
       reconfigure: (options: {
-        players?: 2 | 3;
+        players?: Players;
         columns?: number;
         rows?: number;
       }) => {
@@ -197,13 +320,13 @@ const useGameState = () => {
         setPlayers(newPlayers);
         if (newPlayers != players || newColumns != columns || newRows != rows) {
           setValues(Array<BoardValue>(newRows * newColumns).fill(undefined));
-          setCurrentPlayer("red");
+          setCurrentPlayer(PLAYER_ONE);
           setWinner(undefined);
         }
       },
       reset: () => {
         setValues(Array<BoardValue>(rows * columns).fill(undefined));
-        setCurrentPlayer("red");
+        setCurrentPlayer(PLAYER_ONE);
         setWinner(undefined);
       },
       update: (column: number) => {
@@ -248,17 +371,19 @@ const useGameState = () => {
           setWinner("draw");
         } else {
           setCurrentPlayer((player) => {
-            if (players === 2) {
-              return player === "red" ? "yellow" : "red";
+            if (players < 3) {
+              // turns are the same for one or two players
+              return player === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
             }
+
             // three players
-            if (player === "red") {
-              return "yellow";
+            if (player === PLAYER_ONE) {
+              return PLAYER_TWO;
             }
-            if (player === "yellow") {
-              return "purple";
+            if (player === PLAYER_TWO) {
+              return PLAYER_THREE;
             }
-            return "red";
+            return PLAYER_ONE;
           });
         }
 
@@ -375,18 +500,24 @@ const GameStatus = (props: GameStatusProps) => {
         </h1>
         <div
           className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${players}, 1fr)` }}
+          style={{
+            gridTemplateColumns: `repeat(${players < 3 ? 2 : players}, 1fr)`,
+          }}
         >
-          <Circle color="red" isEmphasized={currentPlayer === "red"} isDense />
+          <Circle
+            color="red"
+            isEmphasized={currentPlayer === PLAYER_ONE}
+            isDense
+          />
           <Circle
             color="yellow"
-            isEmphasized={currentPlayer === "yellow"}
+            isEmphasized={currentPlayer === PLAYER_TWO}
             isDense
           />
           {players === 3 && (
             <Circle
               color="purple"
-              isEmphasized={currentPlayer === "purple"}
+              isEmphasized={currentPlayer === PLAYER_THREE}
               isDense
             />
           )}
@@ -435,10 +566,11 @@ const GameSettings = (props: GameSettingsProps) => {
               id="players"
               value={players}
               onChange={(e) => {
-                const players = parseInt(e.target.value, 10) as 2 | 3;
+                const players = parseInt(e.target.value, 10) as Players;
                 reconfigure({ players });
               }}
             >
+              <option value={1}>1</option>
               <option value={2}>2</option>
               <option value={3}>3</option>
             </select>
@@ -450,7 +582,7 @@ const GameSettings = (props: GameSettingsProps) => {
               id="columns"
               value={columns}
               onChange={(e) => {
-                const columns = parseInt(e.target.value, 10) as 2 | 3;
+                const columns = parseInt(e.target.value, 10);
                 reconfigure({ columns });
               }}
             >
@@ -469,7 +601,7 @@ const GameSettings = (props: GameSettingsProps) => {
               id="rows"
               value={rows}
               onChange={(e) => {
-                const rows = parseInt(e.target.value, 10) as 2 | 3;
+                const rows = parseInt(e.target.value, 10);
                 reconfigure({ rows });
               }}
             >
@@ -499,6 +631,15 @@ const Game = () => {
     reconfigure,
     reset,
   } = useGameState();
+
+  useOpponent({
+    players,
+    rows,
+    columns,
+    currentPlayer,
+    values,
+    update,
+  });
 
   return (
     <div className="flex flex-col items-center gap-8">
