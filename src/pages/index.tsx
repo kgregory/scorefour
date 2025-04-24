@@ -380,8 +380,9 @@ const useGameState = () => {
           setWinner("draw");
         } else {
           setCurrentPlayer((player) => {
+            const playerCount = players === 1 ? 2 : players;
             const playerIndex = allPlayers.indexOf(player);
-            const nextPlayerIndex = (playerIndex + 1) % players;
+            const nextPlayerIndex = (playerIndex + 1) % playerCount;
             const nextPlayer = allPlayers[nextPlayerIndex];
             return nextPlayer ?? PLAYER_ONE;
           });
