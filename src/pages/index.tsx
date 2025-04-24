@@ -256,10 +256,19 @@ const getBestMove = <TValue,>(
 const PLAYER_ONE = "red";
 const PLAYER_TWO = "yellow";
 const PLAYER_THREE = "purple";
+const PLAYER_FOUR = "green";
+const allPlayers = [PLAYER_ONE, PLAYER_TWO, PLAYER_THREE, PLAYER_FOUR] as const;
 
-type Players = 1 | 2 | 3;
-type Player = typeof PLAYER_ONE | typeof PLAYER_TWO | typeof PLAYER_THREE;
-type BoardValue = Player | "win" | undefined;
+type Players = 1 | 2 | 3 | 4;
+type Player = (typeof allPlayers)[number];
+type PlayerWin = `${Player}-win`;
+type BoardValue = Player | PlayerWin | undefined;
+
+const valueColorMap = allPlayers.reduce((acc, player) => {
+  acc.set(player, player);
+  acc.set(`${player}-win`, player);
+  return acc;
+}, new Map<BoardValue, CircleProps["color"]>());
 
 type UseOpponentParams = Pick<
   ReturnType<typeof useGameState>,
@@ -361,7 +370,7 @@ const useGameState = () => {
 
         // mark winning cells, if any
         winningCells.forEach((i) => {
-          newValues[i] = "win";
+          newValues[i] = `${currentPlayer}-win`;
         });
 
         if (winningCells.length > 0) {
@@ -371,19 +380,10 @@ const useGameState = () => {
           setWinner("draw");
         } else {
           setCurrentPlayer((player) => {
-            if (players < 3) {
-              // turns are the same for one or two players
-              return player === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
-            }
-
-            // three players
-            if (player === PLAYER_ONE) {
-              return PLAYER_TWO;
-            }
-            if (player === PLAYER_TWO) {
-              return PLAYER_THREE;
-            }
-            return PLAYER_ONE;
+            const playerIndex = allPlayers.indexOf(player);
+            const nextPlayerIndex = (playerIndex + 1) % players;
+            const nextPlayer = allPlayers[nextPlayerIndex];
+            return nextPlayer ?? PLAYER_ONE;
           });
         }
 
@@ -396,9 +396,10 @@ const useGameState = () => {
 
 interface CircleProps {
   onClick?: () => void;
-  color?: "empty" | "red" | "yellow" | "purple" | "win";
+  color?: "empty" | "red" | "yellow" | "purple" | "green";
   isEmphasized?: boolean;
   isDense?: boolean;
+  isWinner?: boolean;
 }
 
 const Circle = (props: CircleProps) => {
@@ -407,6 +408,7 @@ const Circle = (props: CircleProps) => {
     color = "empty",
     isEmphasized = true,
     isDense = false,
+    isWinner = false,
   } = props;
 
   const colorClasses = useMemo(() => {
@@ -419,7 +421,7 @@ const Circle = (props: CircleProps) => {
     if (color === "purple") {
       return "border-purple-500 bg-purple-700 text-purple-500";
     }
-    if (color === "win") {
+    if (color === "green") {
       return "border-green-500 bg-green-600 text-green-500";
     }
     return "border-gray-200 bg-white";
@@ -430,7 +432,7 @@ const Circle = (props: CircleProps) => {
 
   return (
     <div
-      className={`min-h-8 min-w-8 origin-center rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} bg-white text-center text-lg shadow-lg ${isDense ? "" : "sm:min-h-16 sm:min-w-16"}`}
+      className={`min-h-8 min-w-8 rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} text-lg shadow-lg ${isDense ? "" : "sm:min-h-16 sm:min-w-16"}`}
       {...(onClick != null
         ? {
             onClick,
@@ -447,7 +449,7 @@ const Circle = (props: CircleProps) => {
       aria-label={color !== "empty" ? color : "empty slot"}
     >
       <div
-        className={`flex size-full items-center justify-center rounded-full border-4 ${colorClasses}`}
+        className={`flex size-full items-center justify-center rounded-full border-4 ${isWinner ? "animate-pulse" : ""} ${colorClasses}`}
       >
         {isDense ? null : color !== "empty" ? "4" : <>&nbsp;</>}
       </div>
@@ -455,10 +457,8 @@ const Circle = (props: CircleProps) => {
   );
 };
 
-interface BoardProps {
-  rows: number;
-  columns: number;
-  values: Array<BoardValue>;
+interface BoardProps
+  extends Pick<ReturnType<typeof useGameState>, "rows" | "columns" | "values"> {
   handleTurn: (column: number) => void;
 }
 
@@ -475,7 +475,8 @@ const Board = (props: BoardProps) => {
           .map((item, i) => (
             <Circle
               key={i}
-              color={values[i]}
+              color={values[i] != null ? valueColorMap.get(values[i]) : "empty"}
+              isWinner={values[i]?.includes("-win")}
               onClick={() => handleTurn(i % columns)}
             ></Circle>
           ))}
@@ -514,10 +515,17 @@ const GameStatus = (props: GameStatusProps) => {
             isEmphasized={currentPlayer === PLAYER_TWO}
             isDense
           />
-          {players === 3 && (
+          {players > 2 && (
             <Circle
               color="purple"
               isEmphasized={currentPlayer === PLAYER_THREE}
+              isDense
+            />
+          )}
+          {players > 3 && (
+            <Circle
+              color="green"
+              isEmphasized={currentPlayer === PLAYER_FOUR}
               isDense
             />
           )}
@@ -573,6 +581,7 @@ const GameSettings = (props: GameSettingsProps) => {
               <option value={1}>1</option>
               <option value={2}>2</option>
               <option value={3}>3</option>
+              <option value={4}>4</option>
             </select>
           </div>
           <span className="text-gray-300">|</span>
