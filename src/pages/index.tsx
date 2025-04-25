@@ -2,6 +2,9 @@ import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 
+/** canvas-confetti uses OffscreenCanvas */
+const isOffscreenCanvasSupported = typeof OffscreenCanvas !== "undefined";
+
 interface Board<TValue = number> {
   values: Array<TValue>;
   columns: number;
@@ -334,7 +337,7 @@ const useResultReaction = (params: UseResultReactionParams) => {
 
   const sadShapes = useMemo(
     () =>
-      OffscreenCanvas != null
+      isOffscreenCanvasSupported
         ? ["😢", "😩", "😧", "😖", "🤬"].map((text) =>
             confetti.shapeFromText({ text, scalar: 15 }),
           )
@@ -344,7 +347,7 @@ const useResultReaction = (params: UseResultReactionParams) => {
   //
   const drawShapes = useMemo(
     () =>
-      OffscreenCanvas != null
+      isOffscreenCanvasSupported
         ? ["👔", "🙈", "🙅", "😑", "😐"].map((text) =>
             confetti.shapeFromText({ text, scalar: 15 }),
           )
