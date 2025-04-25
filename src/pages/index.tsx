@@ -2,6 +2,9 @@ import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 
+/** canvas-confetti uses OffscreenCanvas */
+const isOffscreenCanvasSupported = typeof OffscreenCanvas !== "undefined";
+
 interface Board<TValue = number> {
   values: Array<TValue>;
   columns: number;
@@ -14,6 +17,10 @@ const adjacentCellIndexes = new Map<
   string,
   Record<Direction, number | undefined>
 >();
+
+/** return a random number within the specified range */
+const getRandomWithinRange = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
 /** get the indexes of the adjacent cells in each direction, where applicable and memoize using a map keyed by the cell */
 const getAdjacentCellIndexes = <TValue,>(
@@ -115,6 +122,21 @@ const checkDirection = <TValue,>({
   ];
 };
 
+/** get the index of the specified column's lowest empty cell */
+const getLowestEmptyCell = <TValue,>(
+  column: number,
+  board: Board<TValue>,
+): number | undefined => {
+  const { rows, columns, values } = board;
+  for (let i = rows - 1; i >= 0; i -= 1) {
+    const index = i * columns + column;
+    if (values[index] == null) {
+      return index;
+    }
+  }
+  return undefined;
+};
+
 /** check horizontal, vertical, and diagonal from the specified cell index */
 const checkCell = <TValue,>(cell: number, board: Board<TValue>) => {
   const { values } = board;
@@ -206,16 +228,15 @@ const getBestMove = <TValue,>(
   const scoredMoves = validColumns
     .map<[number, number]>((column) => {
       // get the index of the cell that would be filled
-      let cell = undefined;
-      for (let i = rows - 1; i >= 0; i -= 1) {
-        if (values[i * columns + column] == null) {
-          cell = i * columns + column;
-          break;
-        }
-      }
+      const cell = getLowestEmptyCell(column, {
+        rows,
+        columns,
+        values,
+      });
 
-      // not likely, but I don't feel like asserting non-null on this below
       if (cell == null) {
+        // not likely because we're processing valid columns,
+        // but I don't feel like asserting non-null on this below
         return [column, 0];
       }
 
@@ -225,29 +246,29 @@ const getBestMove = <TValue,>(
 
       if (playerOutcomes.has(4)) {
         // player wins with this move
-        return [column, 1000];
+        return [column, getRandomWithinRange(1000, 1099)];
       }
       if (opponentOutcomes.has(4)) {
         // opponent wins with this move
-        return [column, 900];
+        return [column, getRandomWithinRange(800, 899)];
       }
       if (playerOutcomes.has(3)) {
         // player will have 3 in a row
-        return [column, 100];
+        return [column, getRandomWithinRange(600, 699)];
       }
       if (opponentOutcomes.has(3)) {
         // opponent will have 3 in a row
-        return [column, 50];
+        return [column, getRandomWithinRange(400, 499)];
       }
       if (playerOutcomes.has(2)) {
         // player will have 2 in a row
-        return [column, 10];
+        return [column, getRandomWithinRange(200, 299)];
       }
       if (opponentOutcomes.has(2)) {
         // opponent will have 2 in a row
-        return [column, 5];
+        return [column, getRandomWithinRange(100, 199)];
       }
-      return [column, 1];
+      return [column, getRandomWithinRange(1, 99)];
     })
     .sort((a, b) => b[1] - a[1]);
 
@@ -316,17 +337,21 @@ const useResultReaction = (params: UseResultReactionParams) => {
 
   const sadShapes = useMemo(
     () =>
-      ["😢", "😩", "😧", "😖", "🤬"].map((text) =>
-        confetti.shapeFromText({ text, scalar: 15 }),
-      ),
+      isOffscreenCanvasSupported
+        ? ["😢", "😩", "😧", "😖", "🤬"].map((text) =>
+            confetti.shapeFromText({ text, scalar: 15 }),
+          )
+        : undefined,
     [],
   );
   //
   const drawShapes = useMemo(
     () =>
-      ["👔", "🙈", "🙅", "😑", "😐"].map((text) =>
-        confetti.shapeFromText({ text, scalar: 15 }),
-      ),
+      isOffscreenCanvasSupported
+        ? ["👔", "🙈", "🙅", "😑", "😐"].map((text) =>
+            confetti.shapeFromText({ text, scalar: 15 }),
+          )
+        : undefined,
     [],
   );
 
@@ -340,7 +365,10 @@ const useResultReaction = (params: UseResultReactionParams) => {
       })?.catch(() => {
         // ignore confetti-related errors
       });
-    } else if (isDraw || isDismal) {
+    } else if (
+      (isDraw && drawShapes != null) ||
+      (isDismal && sadShapes != null)
+    ) {
       confetti({
         spread: 0,
         gravity: 0.65,
@@ -404,22 +432,20 @@ const useGameState = () => {
           return;
         }
 
-        const newValues = [...values];
-
-        // check the column from the bottom up
-        let cell = undefined;
-        for (let i = rows - 1; i >= 0; i -= 1) {
-          if (newValues[i * columns + column] == null) {
-            newValues[i * columns + column] = currentPlayer;
-            cell = i * columns + column;
-            break;
-          }
-        }
+        // get the index of the cell that would be filled
+        const cell = getLowestEmptyCell(column, {
+          rows,
+          columns,
+          values,
+        });
 
         if (cell == null) {
           // no need to check the board for an invalid move
           return;
         }
+
+        const newValues = [...values];
+        newValues[cell] = currentPlayer;
 
         // filter the adjoining cells by the directions that have at least 4 in a row
         const winningCells = Object.values(
