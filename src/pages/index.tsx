@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 
 /** canvas-confetti uses OffscreenCanvas */
@@ -274,6 +274,21 @@ const getBestMove = <TValue,>(
 
   return scoredMoves.length > 0 ? scoredMoves[0] : undefined;
 };
+
+/** simplified debounce for interactions (e.g. prevent spamming click) */
+function useDebouncedInteraction(delay = 500) {
+  const lastClickTime = useRef(0);
+
+  // ignore clicks that are too close together
+  return useCallback(() => {
+    const now = Date.now();
+    if (now - lastClickTime.current < delay) {
+      return false;
+    }
+    lastClickTime.current = now;
+    return true;
+  }, [delay]);
+}
 
 const PLAYER_ONE = "red";
 const PLAYER_TWO = "yellow";
@@ -574,6 +589,10 @@ interface BoardProps
 
 const Board = (props: BoardProps) => {
   const { rows, columns, values, handleTurn } = props;
+
+  // help prevent the user from accidentally clicking too fast and taking the other player's turn
+  const canClick = useDebouncedInteraction();
+
   return (
     <div className="min-w-96 border-8 border-solid border-blue-600 bg-gradient-to-b from-blue-700 to-blue-800 p-2 shadow-inner drop-shadow-md">
       <div
@@ -587,7 +606,11 @@ const Board = (props: BoardProps) => {
               key={i}
               color={values[i] != null ? valueColorMap.get(values[i]) : "empty"}
               isWinner={values[i]?.includes("-win")}
-              onClick={() => handleTurn(i % columns)}
+              onClick={() => {
+                if (canClick()) {
+                  handleTurn(i % columns);
+                }
+              }}
             ></Circle>
           ))}
       </div>
