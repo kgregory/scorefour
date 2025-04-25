@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 
 /** canvas-confetti uses OffscreenCanvas */
@@ -335,6 +335,16 @@ const useResultReaction = (params: UseResultReactionParams) => {
   const isJoyous = isVictorious && isHuman;
   const isDismal = isVictorious && !isHuman;
 
+  const happyShapes = useMemo(
+    () =>
+      isOffscreenCanvasSupported
+        ? ["🥳", "😸", "🤩", "🕺", "🎉"].map((text) =>
+            confetti.shapeFromText({ text, scalar: 15 }),
+          )
+        : undefined,
+    [],
+  );
+
   const sadShapes = useMemo(
     () =>
       isOffscreenCanvasSupported
@@ -344,7 +354,7 @@ const useResultReaction = (params: UseResultReactionParams) => {
         : undefined,
     [],
   );
-  //
+
   const drawShapes = useMemo(
     () =>
       isOffscreenCanvasSupported
@@ -355,8 +365,25 @@ const useResultReaction = (params: UseResultReactionParams) => {
     [],
   );
 
+  const showEmojiConfetti = useCallback((shapes: confetti.Shape[]) => {
+    confetti({
+      spread: 0,
+      gravity: 0.65,
+      decay: 0.96,
+      startVelocity: 15,
+      scalar: 10,
+      particleCount: 1,
+      flat: true,
+      disableForReducedMotion: true,
+      shapes,
+    })?.catch(() => {
+      // ignore confetti-related errors
+    });
+  }, []);
+
   useEffect(() => {
-    if (isJoyous) {
+    if (isJoyous && happyShapes != null) {
+      // emoji and confetti for the winner
       confetti({
         particleCount: 100,
         spread: 70,
@@ -365,25 +392,21 @@ const useResultReaction = (params: UseResultReactionParams) => {
       })?.catch(() => {
         // ignore confetti-related errors
       });
-    } else if (
-      (isDraw && drawShapes != null) ||
-      (isDismal && sadShapes != null)
-    ) {
-      confetti({
-        spread: 0,
-        gravity: 0.65,
-        decay: 0.96,
-        startVelocity: 15,
-        scalar: 10,
-        particleCount: 1,
-        flat: true,
-        disableForReducedMotion: true,
-        shapes: isDismal ? sadShapes : drawShapes,
-      })?.catch(() => {
-        // ignore confetti-related errors
-      });
+      showEmojiConfetti(happyShapes);
+    } else if (isDraw && drawShapes != null) {
+      showEmojiConfetti(drawShapes);
+    } else if (isDismal && sadShapes != null) {
+      showEmojiConfetti(sadShapes);
     }
-  }, [drawShapes, isDismal, isDraw, isJoyous, sadShapes]);
+  }, [
+    drawShapes,
+    happyShapes,
+    isDismal,
+    isDraw,
+    isJoyous,
+    sadShapes,
+    showEmojiConfetti,
+  ]);
 };
 
 const useGameState = () => {
