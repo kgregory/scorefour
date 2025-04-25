@@ -574,7 +574,7 @@ const Circle = (props: CircleProps) => {
       aria-label={color !== "empty" ? color : "empty slot"}
     >
       <div
-        className={`flex size-full items-center justify-center rounded-full border-4 ${isWinner ? "animate-pulse" : ""} ${colorClasses}`}
+        className={`flex size-full select-none items-center justify-center rounded-full border-4 ${isWinner ? "animate-pulse" : ""} ${colorClasses}`}
       >
         {isDense ? null : color !== "empty" ? "4" : <>&nbsp;</>}
       </div>
