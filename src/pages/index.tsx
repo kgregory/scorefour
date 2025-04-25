@@ -334,17 +334,21 @@ const useResultReaction = (params: UseResultReactionParams) => {
 
   const sadShapes = useMemo(
     () =>
-      ["😢", "😩", "😧", "😖", "🤬"].map((text) =>
-        confetti.shapeFromText({ text, scalar: 15 }),
-      ),
+      OffscreenCanvas != null
+        ? ["😢", "😩", "😧", "😖", "🤬"].map((text) =>
+            confetti.shapeFromText({ text, scalar: 15 }),
+          )
+        : undefined,
     [],
   );
   //
   const drawShapes = useMemo(
     () =>
-      ["👔", "🙈", "🙅", "😑", "😐"].map((text) =>
-        confetti.shapeFromText({ text, scalar: 15 }),
-      ),
+      OffscreenCanvas != null
+        ? ["👔", "🙈", "🙅", "😑", "😐"].map((text) =>
+            confetti.shapeFromText({ text, scalar: 15 }),
+          )
+        : undefined,
     [],
   );
 
@@ -358,7 +362,10 @@ const useResultReaction = (params: UseResultReactionParams) => {
       })?.catch(() => {
         // ignore confetti-related errors
       });
-    } else if (isDraw || isDismal) {
+    } else if (
+      (isDraw && drawShapes != null) ||
+      (isDismal && sadShapes != null)
+    ) {
       confetti({
         spread: 0,
         gravity: 0.65,
