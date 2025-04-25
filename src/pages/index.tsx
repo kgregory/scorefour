@@ -299,17 +299,36 @@ const useOpponent = (params: UseOpponentParams) => {
   }, [columns, currentPlayer, players, rows, update, values]);
 };
 
-type UseVictoryParams = Pick<
+type UseResultReactionParams = Pick<
   ReturnType<typeof useGameState>,
   "players" | "winner"
 >;
 
-const useVictory = (params: UseVictoryParams) => {
+const useResultReaction = (params: UseResultReactionParams) => {
   const { players, winner } = params;
 
-  const isVictorious = winner !== "draw" && winner != null;
-  const isHuman = players > 1 || (players === 1 && winner === PLAYER_ONE);
+  const isDraw = winner === "draw";
+  const isVictorious = !isDraw && winner != null;
+  const isMultiplayer = players > 1;
+  const isHuman = isMultiplayer || (!isMultiplayer && winner === PLAYER_ONE);
   const isJoyous = isVictorious && isHuman;
+  const isDismal = isVictorious && !isHuman;
+
+  const sadShapes = useMemo(
+    () =>
+      ["😢", "😩", "😧", "😖", "🤬"].map((text) =>
+        confetti.shapeFromText({ text, scalar: 15 }),
+      ),
+    [],
+  );
+  //
+  const drawShapes = useMemo(
+    () =>
+      ["👔", "🙈", "🙅", "😑", "😐"].map((text) =>
+        confetti.shapeFromText({ text, scalar: 15 }),
+      ),
+    [],
+  );
 
   useEffect(() => {
     if (isJoyous) {
@@ -317,11 +336,26 @@ const useVictory = (params: UseVictoryParams) => {
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
+        disableForReducedMotion: true,
+      })?.catch(() => {
+        // ignore confetti-related errors
+      });
+    } else if (isDraw || isDismal) {
+      confetti({
+        spread: 0,
+        gravity: 0.65,
+        decay: 0.96,
+        startVelocity: 15,
+        scalar: 10,
+        particleCount: 1,
+        flat: true,
+        disableForReducedMotion: true,
+        shapes: isDismal ? sadShapes : drawShapes,
       })?.catch(() => {
         // ignore confetti-related errors
       });
     }
-  }, [isJoyous]);
+  }, [drawShapes, isDismal, isDraw, isJoyous, sadShapes]);
 };
 
 const useGameState = () => {
@@ -668,7 +702,7 @@ const Game = () => {
     reset,
   } = useGameState();
 
-  useVictory({
+  useResultReaction({
     players,
     winner,
   });
