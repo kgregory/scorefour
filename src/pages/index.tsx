@@ -1,5 +1,6 @@
 import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
+import confetti from "canvas-confetti";
 
 interface Board<TValue = number> {
   values: Array<TValue>;
@@ -296,6 +297,31 @@ const useOpponent = (params: UseOpponentParams) => {
       };
     }
   }, [columns, currentPlayer, players, rows, update, values]);
+};
+
+type UseVictoryParams = Pick<
+  ReturnType<typeof useGameState>,
+  "players" | "winner"
+>;
+
+const useVictory = (params: UseVictoryParams) => {
+  const { players, winner } = params;
+
+  const isVictorious = winner !== "draw" && winner != null;
+  const isHuman = players > 1 || (players === 1 && winner === PLAYER_ONE);
+  const isJoyous = isVictorious && isHuman;
+
+  useEffect(() => {
+    if (isJoyous) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      })?.catch(() => {
+        // ignore confetti-related errors
+      });
+    }
+  }, [isJoyous]);
 };
 
 const useGameState = () => {
@@ -641,6 +667,11 @@ const Game = () => {
     reconfigure,
     reset,
   } = useGameState();
+
+  useVictory({
+    players,
+    winner,
+  });
 
   useOpponent({
     players,
