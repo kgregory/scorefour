@@ -7,7 +7,9 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit && echo '\\x1b[32m✔ No Typescript errors\\x1b[0m'",
+    "test": "npm run typecheck && npm run lint"
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.10.1",
