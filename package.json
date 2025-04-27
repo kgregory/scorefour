@@ -8,8 +8,11 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
+    "test": "vitest",            
+    "test:watch": "vitest watch", 
+    "test:coverage": "vitest --coverage" , 
     "typecheck": "tsc --noEmit && echo '\\x1b[32m✔ No Typescript errors\\x1b[0m'",
-    "test": "npm run typecheck && npm run lint"
+    "ci": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.10.1",
@@ -20,6 +23,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/eslint": "^8.56.10",
     "@types/node": "^20.14.8",
@@ -27,13 +31,16 @@
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",
+    "@vitejs/plugin-react": "^4.4.1",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.4",
+    "jsdom": "^26.1.0",
     "postcss": "^8.4.38",
     "prettier": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.5",
     "tailwindcss": "^3.4.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^3.1.2"
   },
   "ct3aMetadata": {
     "initVersion": "7.30.0"
