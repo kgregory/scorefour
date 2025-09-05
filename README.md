@@ -2,9 +2,25 @@
 
 This is the world's worst [Connect Four](https://en.wikipedia.org/wiki/Connect_Four) clone and my first attempt at a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`. It is also my first time using [Tailwind CSS](https://tailwindcss.com).
 
+## Options
+
+**1-4 Players: Red, Yellow, Green, Purple**
+
+The game supports single or multiplayer (default 2 players, red and yellow):
+
+- Singleplayer games are played against a simulated opponent
+- Multiplayer games are turn-based, played on the same device.
+
+**Board size**
+
+Select a size (default 7x6):
+
+- 4-9 columns
+- 4-9 rows
+
 ## How to Play
 
-Play is turn-based. Red goes first, followed by yellow. Connect, err, score four chips horizontally, vertically, or diagonally to win.
+Play is turn-based. Red goes first, followed by yellow, and so on. Connect, err, score four chips horizontally, vertically, or diagonally to win.
 
 ## Learn More
 
