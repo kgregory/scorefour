@@ -2,6 +2,8 @@
 
 This is the world's worst [Connect Four](https://en.wikipedia.org/wiki/Connect_Four) clone and my first attempt at a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`. It is also my first time using [Tailwind CSS](https://tailwindcss.com).
 
+Play now: https://scorefour.vercel.app
+
 ## Options
 
 **1-4 Players: Red, Yellow, Green, Purple**
