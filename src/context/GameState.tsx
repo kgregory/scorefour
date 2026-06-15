@@ -43,10 +43,12 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
   const [currentPlayer, setCurrentPlayer] = useState<Player>(PLAYER_ONE);
   const [winner, setWinner] = useState<Player | "draw" | null>(null);
 
-  // reset the board when the number of rows or columns changes
+  // reset the board when any setting changes
   useEffect(() => {
     setValues(Array<BoardValue>(rows * columns).fill(undefined));
-  }, [columns, rows]);
+    setCurrentPlayer(PLAYER_ONE);
+    setWinner(null);
+  }, [columns, rows, players]);
 
   return (
     <PlayersContext.Provider value={players}>
