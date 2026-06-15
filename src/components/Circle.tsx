@@ -39,7 +39,7 @@ export const Circle = (props: CircleProps) => {
 
   return (
     <div
-      className={`min-h-8 min-w-8 rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} text-lg shadow-lg ${isDense ? "" : "sm:min-h-16 sm:min-w-16"}`}
+      className={`aspect-square min-h-8 min-w-8 rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} text-lg shadow-lg ${isDense ? "" : "sm:min-h-16 sm:min-w-16"}`}
       {...(onClick != null
         ? {
             onClick,
