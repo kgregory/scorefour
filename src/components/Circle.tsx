@@ -28,7 +28,7 @@ export const Circle = (props: CircleProps) => {
 
   return (
     <div
-      className={`aspect-square min-w-8 rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} shadow-lg ${isDense ? "" : "sm:min-w-16"}`}
+      className={`relative aspect-square min-w-8 rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} shadow-lg ${isDense ? "" : "sm:min-w-16"}`}
       onClick={onClick}
       role={onClick != null ? "button" : undefined}
       tabIndex={onClick != null ? (isDisabled ? -1 : 0) : undefined}
@@ -43,7 +43,7 @@ export const Circle = (props: CircleProps) => {
       aria-label={color !== "empty" ? color : "empty slot"}
     >
       <div
-        className={`flex aspect-square w-full select-none items-center justify-center rounded-full border-4 text-lg ${isWinner ? "animate-pulse" : ""} ${colorClasses[color]}`}
+        className={`absolute inset-0 flex select-none items-center justify-center rounded-full border-4 text-lg ${isWinner ? "animate-pulse" : ""} ${colorClasses[color]}`}
       >
         {!isDense && color !== "empty" && "4"}
       </div>
