@@ -28,7 +28,7 @@ export const Board = (props: BoardProps) => {
   return (
     <div className="min-w-96 border-8 border-solid border-blue-600 bg-gradient-to-b from-blue-700 to-blue-800 p-2 shadow-inner drop-shadow-md">
       <div
-        className="grid gap-2"
+        className="grid justify-items-center gap-2"
         style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
       >
         {Array(columns * rows)
