@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { PLAYER_ONE } from "~/utils/constants";
-import type { Players } from "~/utils/types";
+import type { Players, Difficulty } from "~/utils/types";
 import type { BoardValue, Player } from "~/utils/types";
 
 type Values = Array<BoardValue>;
@@ -19,6 +19,7 @@ const RowsContext = createContext<number | undefined>(undefined);
 const CurrentPlayerContext = createContext<Player | undefined>(undefined);
 const ValuesContext = createContext<Values | undefined>(undefined);
 const WinnerContext = createContext<Winner | undefined>(undefined);
+const DifficultyContext = createContext<Difficulty | undefined>(undefined);
 
 type ContextSetter<TValue> = Dispatch<SetStateAction<TValue>> | undefined;
 
@@ -28,6 +29,7 @@ const SetRowsContext = createContext<ContextSetter<number>>(undefined);
 const SetCurrentPlayerContext = createContext<ContextSetter<Player>>(undefined);
 const SetValuesContext = createContext<ContextSetter<Values>>(undefined);
 const SetWinnerContext = createContext<ContextSetter<Winner>>(undefined);
+const SetDifficultyContext = createContext<ContextSetter<Difficulty>>(undefined);
 
 interface GameStateProviderProps {
   children: React.ReactNode;
@@ -42,6 +44,7 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
   );
   const [currentPlayer, setCurrentPlayer] = useState<Player>(PLAYER_ONE);
   const [winner, setWinner] = useState<Player | "draw" | null>(null);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
 
   // reset the board when any setting changes
   useEffect(() => {
@@ -65,7 +68,13 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
                       >
                         <WinnerContext.Provider value={winner}>
                           <SetWinnerContext.Provider value={setWinner}>
-                            {props.children}
+                            <DifficultyContext.Provider value={difficulty}>
+                              <SetDifficultyContext.Provider
+                                value={setDifficulty}
+                              >
+                                {props.children}
+                              </SetDifficultyContext.Provider>
+                            </DifficultyContext.Provider>
                           </SetWinnerContext.Provider>
                         </WinnerContext.Provider>
                       </SetCurrentPlayerContext.Provider>
@@ -187,6 +196,24 @@ export const useSetWinner = () => {
   const context = useContext(SetWinnerContext);
   if (context === undefined) {
     throw new Error("useSetWinner must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get the current AI difficulty from context */
+export const useDifficulty = () => {
+  const context = useContext(DifficultyContext);
+  if (context === undefined) {
+    throw new Error("useDifficulty must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get the setter for the AI difficulty from context */
+export const useSetDifficulty = () => {
+  const context = useContext(SetDifficultyContext);
+  if (context === undefined) {
+    throw new Error("useSetDifficulty must be used within a GameStateProvider");
   }
   return context;
 };

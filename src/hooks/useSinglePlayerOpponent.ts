@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import type { Player } from "../utils/types";
+import { DIFFICULTY_STRATEGY } from "../utils/types";
 import { getBestMove } from "~/utils/getBestMove";
 import {
   useColumns,
@@ -7,6 +8,7 @@ import {
   usePlayers,
   useCurrentPlayer,
   useValues,
+  useDifficulty,
 } from "~/context/GameState";
 
 interface UseSinglePlayerOpponentParams {
@@ -26,15 +28,14 @@ export const useSinglePlayerOpponent = (
   const rows = useRows();
   const currentPlayer = useCurrentPlayer();
   const values = useValues();
+  const difficulty = useDifficulty();
 
   // this effect is used to simulate an AI player when there is only one player
   // it will review the available moves and pick the one that scores the highest according to its rules
   useEffect(() => {
     if (players === 1 && currentPlayer === secondPlayer) {
       const timeout = setTimeout(() => {
-        const [column] =
-          getBestMove(currentPlayer, firstPlayer, { rows, columns, values }) ??
-          [];
+        const column = getBestMove(currentPlayer, firstPlayer, { rows, columns, values }, DIFFICULTY_STRATEGY[difficulty]);
 
         if (column != null) {
           update(column);
@@ -47,6 +48,7 @@ export const useSinglePlayerOpponent = (
   }, [
     columns,
     currentPlayer,
+    difficulty,
     firstPlayer,
     players,
     rows,
