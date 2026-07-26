@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Players } from "~/utils/types";
+import type { Players, Difficulty } from "~/utils/types";
 import {
   usePlayers,
   useColumns,
@@ -8,6 +8,8 @@ import {
   useSetColumns,
   useSetRows,
   useResetGame,
+  useDifficulty,
+  useSetDifficulty,
 } from "~/context/GameState";
 
 /** configuration for the game */
@@ -15,10 +17,12 @@ export const GameSettings = () => {
   const players = usePlayers();
   const columns = useColumns();
   const rows = useRows();
+  const difficulty = useDifficulty();
 
   const setPlayers = useSetPlayers();
   const setColumns = useSetColumns();
   const setRows = useSetRows();
+  const setDifficulty = useSetDifficulty();
   const resetGame = useResetGame();
 
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -87,6 +91,25 @@ export const GameSettings = () => {
               <option value={9}>9</option>
             </select>
           </div>
+          {players === 1 && (
+            <>
+              <span className="text-gray-300">|</span>
+              <div className="flex gap-2">
+                <label htmlFor="difficulty">Difficulty:</label>
+                <select
+                  id="difficulty"
+                  value={difficulty}
+                  onChange={(e) => {
+                    setDifficulty(e.target.value as Difficulty);
+                  }}
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+            </>
+          )}
         </div>
       )}
     </>
