@@ -11,16 +11,23 @@ const valueColorMap = allPlayers.reduce((acc, player) => {
 }, new Map<BoardValue, CircleProps["color"]>());
 
 interface BoardProps {
-  handleTurn: (column: number) => void;
+  handleTurn?: (column: number) => void;
+  columns?: number;
+  rows?: number;
+  values?: BoardValue[];
 }
 
 /** game board, renders `Circle` based on configured rows, columns, and current values */
 export const Board = (props: BoardProps) => {
   const { handleTurn } = props;
 
-  const columns = useColumns();
-  const rows = useRows();
-  const values = useValues();
+  const contextColumns = useColumns();
+  const contextRows = useRows();
+  const contextValues = useValues();
+
+  const columns = props.columns ?? contextColumns;
+  const rows = props.rows ?? contextRows;
+  const values = props.values ?? contextValues;
 
   // help prevent the user from accidentally clicking too fast and taking the other player's turn
   const canClick = useDebouncedInteraction();
@@ -33,17 +40,16 @@ export const Board = (props: BoardProps) => {
       >
         {Array(columns * rows)
           .fill(null)
-          .map((item, i) => (
+          .map((_, i) => (
             <Circle
               key={i}
               color={values[i] != null ? valueColorMap.get(values[i]) : "empty"}
+              isEmphasized
               isWinner={values[i]?.includes("-win")}
-              onClick={() => {
-                if (canClick()) {
-                  handleTurn(i % columns);
-                }
-              }}
-            ></Circle>
+              onClick={handleTurn != null ? () => {
+                if (canClick()) handleTurn(i % columns);
+              } : undefined}
+            />
           ))}
       </div>
     </div>

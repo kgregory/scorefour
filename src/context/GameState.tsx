@@ -3,11 +3,12 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { PLAYER_ONE } from "~/utils/constants";
-import type { Players, Difficulty } from "~/utils/types";
+import type { Players, Screen, Difficulty } from "~/utils/types";
 import type { BoardValue, Player } from "~/utils/types";
 
 type Values = Array<BoardValue>;
@@ -20,6 +21,8 @@ const CurrentPlayerContext = createContext<Player | undefined>(undefined);
 const ValuesContext = createContext<Values | undefined>(undefined);
 const WinnerContext = createContext<Winner | undefined>(undefined);
 const DifficultyContext = createContext<Difficulty | undefined>(undefined);
+const ScreenContext = createContext<Screen | undefined>(undefined);
+const WasQuitContext = createContext<Player | null | undefined>(undefined);
 
 type ContextSetter<TValue> = Dispatch<SetStateAction<TValue>> | undefined;
 
@@ -30,6 +33,8 @@ const SetCurrentPlayerContext = createContext<ContextSetter<Player>>(undefined);
 const SetValuesContext = createContext<ContextSetter<Values>>(undefined);
 const SetWinnerContext = createContext<ContextSetter<Winner>>(undefined);
 const SetDifficultyContext = createContext<ContextSetter<Difficulty>>(undefined);
+const SetScreenContext = createContext<ContextSetter<Screen>>(undefined);
+const SetWasQuitContext = createContext<ContextSetter<Player | null>>(undefined);
 
 interface GameStateProviderProps {
   children: React.ReactNode;
@@ -45,13 +50,24 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
   const [currentPlayer, setCurrentPlayer] = useState<Player>(PLAYER_ONE);
   const [winner, setWinner] = useState<Player | "draw" | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [screen, setScreen] = useState<Screen>("start");
+  const [wasQuit, setWasQuit] = useState<Player | null>(null);
 
-  // reset the board when any setting changes
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+
+  // Dimension changes: resize the board and reset turn order.
   useEffect(() => {
+    if (screenRef.current === "ended") return;
     setValues(Array<BoardValue>(rows * columns).fill(undefined));
     setCurrentPlayer(PLAYER_ONE);
-    setWinner(null);
-  }, [columns, rows, players]);
+  }, [columns, rows]);
+
+  // Player count change: reset the board but keep the current turn.
+  useEffect(() => {
+    if (screenRef.current === "ended") return;
+    setValues((prev) => Array<BoardValue>(prev.length).fill(undefined));
+  }, [players]);
 
   return (
     <PlayersContext.Provider value={players}>
@@ -63,16 +79,20 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
                 <ValuesContext.Provider value={values}>
                   <SetValuesContext.Provider value={setValues}>
                     <CurrentPlayerContext.Provider value={currentPlayer}>
-                      <SetCurrentPlayerContext.Provider
-                        value={setCurrentPlayer}
-                      >
+                      <SetCurrentPlayerContext.Provider value={setCurrentPlayer}>
                         <WinnerContext.Provider value={winner}>
                           <SetWinnerContext.Provider value={setWinner}>
                             <DifficultyContext.Provider value={difficulty}>
-                              <SetDifficultyContext.Provider
-                                value={setDifficulty}
-                              >
-                                {props.children}
+                              <SetDifficultyContext.Provider value={setDifficulty}>
+                                <ScreenContext.Provider value={screen}>
+                                  <SetScreenContext.Provider value={setScreen}>
+                                    <WasQuitContext.Provider value={wasQuit}>
+                                      <SetWasQuitContext.Provider value={setWasQuit}>
+                                        {props.children}
+                                      </SetWasQuitContext.Provider>
+                                    </WasQuitContext.Provider>
+                                  </SetScreenContext.Provider>
+                                </ScreenContext.Provider>
                               </SetDifficultyContext.Provider>
                             </DifficultyContext.Provider>
                           </SetWinnerContext.Provider>
@@ -144,6 +164,33 @@ export const useWinner = () => {
   return context;
 };
 
+/** get the current AI difficulty from context */
+export const useDifficulty = () => {
+  const context = useContext(DifficultyContext);
+  if (context === undefined) {
+    throw new Error("useDifficulty must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get the current screen from context */
+export const useScreen = () => {
+  const context = useContext(ScreenContext);
+  if (context === undefined) {
+    throw new Error("useScreen must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get whether the last game was quit (vs won/drawn) */
+export const useWasQuit = () => {
+  const context = useContext(WasQuitContext);
+  if (context === undefined) {
+    throw new Error("useWasQuit must be used within a GameStateProvider");
+  }
+  return context;
+};
+
 /** get the setter for the number of players from context */
 export const useSetPlayers = () => {
   const context = useContext(SetPlayersContext);
@@ -200,15 +247,6 @@ export const useSetWinner = () => {
   return context;
 };
 
-/** get the current AI difficulty from context */
-export const useDifficulty = () => {
-  const context = useContext(DifficultyContext);
-  if (context === undefined) {
-    throw new Error("useDifficulty must be used within a GameStateProvider");
-  }
-  return context;
-};
-
 /** get the setter for the AI difficulty from context */
 export const useSetDifficulty = () => {
   const context = useContext(SetDifficultyContext);
@@ -218,17 +256,39 @@ export const useSetDifficulty = () => {
   return context;
 };
 
-/** get a function to reset the game using the current settings */
-export const useResetGame = () => {
+/** get the setter for the current screen from context */
+export const useSetScreen = () => {
+  const context = useContext(SetScreenContext);
+  if (context === undefined) {
+    throw new Error("useSetScreen must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get the setter for the wasQuit flag from context */
+export const useSetWasQuit = () => {
+  const context = useContext(SetWasQuitContext);
+  if (context === undefined) {
+    throw new Error("useSetWasQuit must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get a function to reset game state and begin a new game */
+export const useStartGame = () => {
   const rows = useRows();
   const columns = useColumns();
   const setValues = useSetValues();
   const setCurrentPlayer = useSetCurrentPlayer();
   const setWinner = useSetWinner();
+  const setScreen = useSetScreen();
+  const setWasQuit = useSetWasQuit();
 
   return useCallback(() => {
     setValues(Array<BoardValue>(rows * columns).fill(undefined));
     setCurrentPlayer(PLAYER_ONE);
     setWinner(null);
-  }, [columns, rows, setCurrentPlayer, setValues, setWinner]);
+    setWasQuit(null);
+    setScreen("playing");
+  }, [columns, rows, setCurrentPlayer, setScreen, setValues, setWasQuit, setWinner]);
 };

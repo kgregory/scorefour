@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { Player } from "../utils/types";
-import { DIFFICULTY_STRATEGY } from "../utils/types";
+import { DIFFICULTY_STRATEGY } from "~/utils/constants";
 import { getBestMove } from "~/utils/getBestMove";
 import {
   useColumns,
