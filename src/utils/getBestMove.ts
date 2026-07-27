@@ -193,6 +193,11 @@ export const getBestMove = <TValue>(
   const validColumns = getOrderedColumns(board);
   if (validColumns.length === 0) return undefined;
 
+  // Scale depth down on larger boards to keep search time bounded.
+  // Baseline is the default 7×6 board (42 cells); depth shrinks proportionally beyond that.
+  // Floor of 4 preserves a meaningful lookahead (enough to see immediate wins/threats two moves out).
+  const depth = Math.max(4, Math.round(strategy.depth * 42 / (board.rows * board.columns)));
+
   let bestColumn: number = validColumns[0]!;
   let bestScore = -Infinity;
 
@@ -201,7 +206,7 @@ export const getBestMove = <TValue>(
     if (cell == null) continue;
     const score = -negamax(
       simulate(board, cell, playerValue),
-      strategy.depth - 1,
+      depth - 1,
       -Infinity,
       Infinity,
       opponentValue,
