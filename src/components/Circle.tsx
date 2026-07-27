@@ -19,7 +19,7 @@ export const Circle = (props: CircleProps) => {
   const {
     onClick,
     color = "empty",
-    isEmphasized = true,
+    isEmphasized = false,
     isDense = false,
     isWinner = false,
   } = props;
