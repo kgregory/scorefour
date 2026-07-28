@@ -6,7 +6,7 @@ const boardValueToColor = (value: BoardValue): PlayerColor =>
   (value?.replace(/-win$/, "") as PlayerColor) ?? "empty";
 
 const isWinValue = (value: BoardValue): value is PlayerWin =>
-  value != null && value.endsWith("-win");
+  Boolean(value?.endsWith("-win"));
 
 export interface BoardDisplayProps {
   values: BoardValue[];
@@ -16,7 +16,12 @@ export interface BoardDisplayProps {
 }
 
 /** renders the full visual board from explicit values — no context dependencies */
-export const BoardDisplay = ({ values, columns, rows, onCellClick }: BoardDisplayProps) => (
+export const BoardDisplay = ({
+  values,
+  columns,
+  rows,
+  onCellClick,
+}: BoardDisplayProps) => (
   <BoardShell columns={columns}>
     {Array.from({ length: columns * rows }, (_, i) => (
       <Circle
@@ -24,7 +29,9 @@ export const BoardDisplay = ({ values, columns, rows, onCellClick }: BoardDispla
         color={boardValueToColor(values[i])}
         isEmphasized
         isWinner={isWinValue(values[i])}
-        onClick={onCellClick != null ? () => onCellClick(i % columns) : undefined}
+        onClick={
+          onCellClick != null ? () => onCellClick(i % columns) : undefined
+        }
       />
     ))}
   </BoardShell>
