@@ -60,7 +60,7 @@ export const EndScreen = ({ onPlayAgain }: EndScreenProps) => {
         {wasQuit != null ? (
           <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
             <Circle color={wasQuit} isEmphasized={false} isDense />
-            <span className="capitalize">{wasQuit} has quit the game</span>
+            <span className="capitalize">{wasQuit} Quit.</span>
           </div>
         ) : winner === "draw" ? (
           <p className="text-2xl font-bold text-slate-700">It&apos;s a draw!</p>
