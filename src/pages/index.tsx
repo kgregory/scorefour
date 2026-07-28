@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
-import { Board } from "~/components/Board";
+import { ConnectedBoard } from "~/components/ConnectedBoard";
 import { StartScreen } from "~/components/StartScreen";
 import { EndScreen } from "~/components/EndScreen";
 import { QuitButton } from "~/components/QuitButton";
@@ -82,7 +82,7 @@ const Game = () => {
               {players > 3 && <Circle color={PLAYER_FOUR} isDense />}
             </div>
           </div>
-          <Board handleTurn={update} />
+          <ConnectedBoard handleTurn={update} />
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
               <Circle color={currentPlayer} isEmphasized={false} isDense />

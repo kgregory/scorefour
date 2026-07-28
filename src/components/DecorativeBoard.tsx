@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { PLAYER_ONE, PLAYER_TWO, PLAYER_THREE, PLAYER_FOUR } from "~/utils/constants";
+import type { PlayerColor } from "~/utils/types";
 import { useColumns, useRows } from "~/context/GameState";
 import { Circle } from "./Circle";
-import type { CircleProps } from "./Circle";
+import { BoardShell } from "./BoardShell";
 
 const STRIPE_COLORS = [PLAYER_TWO, PLAYER_THREE, PLAYER_FOUR] as const;
 const CYCLE_MS = 2000;
@@ -51,28 +52,22 @@ export const DecorativeBoard = () => {
   const patternCells = getPatternCells(columns, rows, phase);
 
   return (
-    <div className="min-w-96 border-8 border-solid border-blue-600 bg-gradient-to-b from-blue-700 to-blue-800 p-2 shadow-inner drop-shadow-md">
-      <div
-        className="grid justify-items-center gap-2"
-        style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
-      >
-        {Array(columns * rows)
-          .fill(null)
-          .map((_, i) => {
-            const row = Math.floor(i / columns);
-            const color: CircleProps["color"] = patternCells.has(i)
-              ? PLAYER_ONE
-              : STRIPE_COLORS[row % STRIPE_COLORS.length];
-            return (
-              <Circle
-                key={i}
-                color={color}
-                isEmphasized={false}
-                isWinner={patternCells.has(i)}
-              />
-            );
-          })}
-      </div>
-    </div>
+    <BoardShell columns={columns}>
+      {Array.from({ length: columns * rows }, (_, i) => {
+          const row = Math.floor(i / columns);
+          const isWinner = patternCells.has(i);
+          const color: PlayerColor = isWinner
+            ? PLAYER_ONE
+            : STRIPE_COLORS[row % STRIPE_COLORS.length]!;
+          return (
+            <Circle
+              key={i}
+              color={color}
+              isEmphasized={false}
+              isWinner={isWinner}
+            />
+          );
+        })}
+    </BoardShell>
   );
 };

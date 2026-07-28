@@ -9,15 +9,9 @@ export const allPlayers = [
   PLAYER_FOUR,
 ] as const;
 
-export type Difficulty = "easy" | "medium" | "hard";
+export const DEFAULT_COLUMNS = 7;
+export const DEFAULT_ROWS = 6;
+export const DEFAULT_BOARD_CELLS = DEFAULT_COLUMNS * DEFAULT_ROWS;
 
-/** "reactive" = take immediate wins/blocks, otherwise random; "minimax" = full lookahead */
-export type MoveStrategy =
-  | { type: "reactive" }
-  | { type: "minimax"; depth: number };
-
-export const DIFFICULTY_STRATEGY: Record<Difficulty, MoveStrategy> = {
-  easy: { type: "reactive" },
-  medium: { type: "minimax", depth: 4 },
-  hard: { type: "minimax", depth: 7 },
-};
+export const MIN_BOARD_DIM = 4;
+export const MAX_BOARD_DIM = 9;

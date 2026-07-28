@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Players, Difficulty } from "~/utils/types";
+import { MIN_BOARD_DIM, MAX_BOARD_DIM, allPlayers } from "~/utils/constants";
 import {
   usePlayers,
   useColumns,
@@ -10,6 +11,11 @@ import {
   useDifficulty,
   useSetDifficulty,
 } from "~/context/GameState";
+
+const BOARD_DIM_OPTIONS = Array.from(
+  { length: MAX_BOARD_DIM - MIN_BOARD_DIM + 1 },
+  (_, i) => MIN_BOARD_DIM + i,
+);
 
 /** configuration for the game */
 export const GameSettings = () => {
@@ -38,10 +44,9 @@ export const GameSettings = () => {
             value={players}
             onChange={(e) => setPlayers(parseInt(e.target.value, 10) as Players)}
           >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-            <option value={4}>4</option>
+            {Array.from({ length: allPlayers.length }, (_, i) => (
+              <option key={i + 1} value={i + 1}>{i + 1}</option>
+            ))}
           </select>
           <label htmlFor="columns">Columns</label>
           <select className="w-24"
@@ -49,12 +54,7 @@ export const GameSettings = () => {
             value={columns}
             onChange={(e) => setColumns(parseInt(e.target.value, 10))}
           >
-            <option value={4}>4</option>
-            <option value={5}>5</option>
-            <option value={6}>6</option>
-            <option value={7}>7</option>
-            <option value={8}>8</option>
-            <option value={9}>9</option>
+            {BOARD_DIM_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
           <label htmlFor="rows">Rows</label>
           <select className="w-24"
@@ -62,12 +62,7 @@ export const GameSettings = () => {
             value={rows}
             onChange={(e) => setRows(parseInt(e.target.value, 10))}
           >
-            <option value={4}>4</option>
-            <option value={5}>5</option>
-            <option value={6}>6</option>
-            <option value={7}>7</option>
-            <option value={8}>8</option>
-            <option value={9}>9</option>
+            {BOARD_DIM_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
           {players === 1 && (
             <>

@@ -33,6 +33,8 @@ export const useUpdateGameState = () => {
         return;
       }
 
+      if (column < 0 || column >= columns) return;
+
       // get the index of the cell that would be filled
       const cell = getLowestEmptyCell(column, {
         rows,
