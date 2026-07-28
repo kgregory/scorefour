@@ -1,12 +1,14 @@
+import type { PlayerColor } from "~/utils/types";
+
 export interface CircleProps {
   onClick?: () => void;
-  color?: "empty" | "red" | "yellow" | "purple" | "green";
+  color?: PlayerColor;
   isEmphasized?: boolean;
   isDense?: boolean;
   isWinner?: boolean;
 }
 
-const colorClasses: Record<NonNullable<CircleProps["color"]>, string> = {
+const colorClasses: Record<PlayerColor, string> = {
   empty: "border-gray-200 bg-white",
   red: "border-red-500 bg-red-700 text-red-500",
   yellow: "border-amber-200 bg-amber-400 text-amber-200",

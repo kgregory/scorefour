@@ -1,8 +1,10 @@
 import { checkCell } from "./checkCell";
 import { getLowestEmptyCell } from "./getLowestEmptyCell";
+import { DEFAULT_BOARD_CELLS } from "./constants";
 import type { Board, MoveStrategy } from "./types";
 
 const WIN_SCORE = 1_000_000;
+const MIN_AI_DEPTH = 4;
 
 const isWin = <TValue>(cell: number, board: Board<TValue>): boolean =>
   Object.values(checkCell(cell, board)).some((cells) => cells.length >= 4);
@@ -110,15 +112,15 @@ const evaluate = <TValue>(
   return score;
 };
 
-const getOrderedColumns = <TValue>(board: Board<TValue>): number[] => {
-  const { columns, values } = board;
+// Sort all columns center-out once for a given board width; order never changes during a search.
+const getSortedColumnOrder = (columns: number): number[] => {
   const center = Math.floor(columns / 2);
-  const valid: number[] = [];
-  for (let c = 0; c < columns; c++) {
-    if (values[c] == null) valid.push(c);
-  }
-  return valid.sort((a, b) => Math.abs(a - center) - Math.abs(b - center));
+  return Array.from({ length: columns }, (_, i) => i)
+    .sort((a, b) => Math.abs(a - center) - Math.abs(b - center));
 };
+
+const getValidColumns = <TValue>(sortedOrder: number[], board: Board<TValue>): number[] =>
+  sortedOrder.filter((c) => board.values[c] == null);
 
 // Always maximizes from the current player's perspective; negate the result at each level.
 const negamax = <TValue>(
@@ -129,11 +131,12 @@ const negamax = <TValue>(
   currentValue: TValue,
   nextValue: TValue,
   lastCell: number | null,
+  sortedColumnOrder: number[],
 ): number => {
   // The previous player just moved; if they won, the current player loses.
   if (lastCell !== null && isWin(lastCell, board)) return -(WIN_SCORE + depth);
 
-  const validColumns = getOrderedColumns(board);
+  const validColumns = getValidColumns(sortedColumnOrder, board);
   if (validColumns.length === 0) return 0;
   if (depth === 0) return evaluate(board, currentValue, nextValue);
 
@@ -149,6 +152,7 @@ const negamax = <TValue>(
       nextValue,
       currentValue,
       cell,
+      sortedColumnOrder,
     );
     if (score > maxScore) maxScore = score;
     if (score > alpha) alpha = score;
@@ -162,7 +166,7 @@ const getReactiveMove = <TValue>(
   opponentValue: TValue,
   board: Board<TValue>,
 ): number | undefined => {
-  const validColumns = getOrderedColumns(board);
+  const validColumns = getValidColumns(getSortedColumnOrder(board.columns), board);
   if (validColumns.length === 0) return undefined;
 
   for (const column of validColumns) {
@@ -190,13 +194,16 @@ export const getBestMove = <TValue>(
     return getReactiveMove(playerValue, opponentValue, board);
   }
 
-  const validColumns = getOrderedColumns(board);
+  const sortedColumnOrder = getSortedColumnOrder(board.columns);
+  const validColumns = getValidColumns(sortedColumnOrder, board);
   if (validColumns.length === 0) return undefined;
 
-  // Scale depth down on larger boards to keep search time bounded.
-  // Baseline is the default 7×6 board (42 cells); depth shrinks proportionally beyond that.
-  // Floor of 4 preserves a meaningful lookahead (enough to see immediate wins/threats two moves out).
-  const depth = Math.max(4, Math.round(strategy.depth * 42 / (board.rows * board.columns)));
+  // Scale depth proportionally to board size so search time stays bounded on large boards.
+  // Clamp at strategy.depth so small boards don't upscale beyond the configured difficulty.
+  const scaledDepth = Math.min(
+    strategy.depth,
+    Math.max(MIN_AI_DEPTH, Math.round(strategy.depth * DEFAULT_BOARD_CELLS / (board.rows * board.columns))),
+  );
 
   let bestColumn: number = validColumns[0]!;
   let bestScore = -Infinity;
@@ -206,12 +213,13 @@ export const getBestMove = <TValue>(
     if (cell == null) continue;
     const score = -negamax(
       simulate(board, cell, playerValue),
-      depth - 1,
+      scaledDepth - 1,
       -Infinity,
       Infinity,
       opponentValue,
       playerValue,
       cell,
+      sortedColumnOrder,
     );
     if (score > bestScore) {
       bestScore = score;

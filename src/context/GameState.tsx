@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { PLAYER_ONE } from "~/utils/constants";
+import { PLAYER_ONE, DEFAULT_COLUMNS, DEFAULT_ROWS } from "~/utils/constants";
 import type { Players, Screen, Difficulty } from "~/utils/types";
 import type { BoardValue, Player } from "~/utils/types";
 
@@ -42,8 +42,8 @@ interface GameStateProviderProps {
 
 export const GameStateProvider = (props: GameStateProviderProps) => {
   const [players, setPlayers] = useState<Players>(2);
-  const [columns, setColumns] = useState(7);
-  const [rows, setRows] = useState(6);
+  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
+  const [rows, setRows] = useState(DEFAULT_ROWS);
   const [values, setValues] = useState(
     Array<BoardValue>(rows * columns).fill(undefined),
   );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PLAYER_ONE } from "~/utils/constants";
 import { usePlayers, useWinner, useWasQuit, useValues, useColumns, useRows } from "~/context/GameState";
-import { Board } from "./Board";
+import { BoardDisplay } from "./BoardDisplay";
 import { Circle } from "./Circle";
 import { GameSettings } from "./GameSettings";
 import type { BoardValue, Player, Players } from "~/utils/types";
@@ -55,7 +55,7 @@ export const EndScreen = ({ onPlayAgain }: EndScreenProps) => {
           {isTryAgain ? "Try Again" : "Play Again"}
         </button>
       </div>
-      <Board values={snap.values} columns={snap.columns} rows={snap.rows} />
+      <BoardDisplay values={snap.values} columns={snap.columns} rows={snap.rows} />
       <div className="flex flex-col items-center gap-3">
         {wasQuit != null ? (
           <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">

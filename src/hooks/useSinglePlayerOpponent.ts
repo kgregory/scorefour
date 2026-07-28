@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import type { Player } from "../utils/types";
-import { DIFFICULTY_STRATEGY } from "~/utils/constants";
+import type { Player, Difficulty, MoveStrategy } from "~/utils/types";
 import { getBestMove } from "~/utils/getBestMove";
 import {
   useColumns,
@@ -10,6 +9,12 @@ import {
   useValues,
   useDifficulty,
 } from "~/context/GameState";
+
+const DIFFICULTY_STRATEGY: Record<Difficulty, MoveStrategy> = {
+  easy: { type: "reactive" },
+  medium: { type: "minimax", depth: 4 },
+  hard: { type: "minimax", depth: 7 },
+};
 
 interface UseSinglePlayerOpponentParams {
   firstPlayer: Player;
@@ -35,7 +40,12 @@ export const useSinglePlayerOpponent = (
   useEffect(() => {
     if (players === 1 && currentPlayer === secondPlayer) {
       const timeout = setTimeout(() => {
-        const column = getBestMove(currentPlayer, firstPlayer, { rows, columns, values }, DIFFICULTY_STRATEGY[difficulty]);
+        const column = getBestMove(
+          currentPlayer,
+          firstPlayer,
+          { rows, columns, values },
+          DIFFICULTY_STRATEGY[difficulty],
+        );
 
         if (column != null) {
           update(column);
