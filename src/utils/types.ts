@@ -11,7 +11,13 @@ export type Players = Indices<typeof allPlayers>;
 export type Player = (typeof allPlayers)[number];
 export type PlayerWin = `${Player}-win`;
 export type BoardValue = Player | PlayerWin | undefined;
-export type Screen = "start" | "play" | "local-play" | "online-play" | "playing" | "ended";
+export type Screen =
+  | "start"
+  | "play"
+  | "local-play"
+  | "online-play"
+  | "playing"
+  | "ended";
 export type GameMode = "local" | "online";
 export type PlayerColor = (typeof allPlayers)[number] | "empty";
 export type Difficulty = "easy" | "medium" | "hard";

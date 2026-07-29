@@ -2,7 +2,11 @@ import { PLAYER_ONE, PLAYER_TWO, allPlayers } from "../src/utils/constants";
 import { getLowestEmptyCell } from "../src/utils/getLowestEmptyCell";
 import { checkCell } from "../src/utils/checkCell";
 import type { Player, BoardValue } from "../src/utils/types";
-import type { RoomState, ClientMessage, ServerMessage } from "../src/utils/partyTypes";
+import type {
+  RoomState,
+  ClientMessage,
+  ServerMessage,
+} from "../src/utils/partyTypes";
 
 const DEFAULT_ROWS = 6;
 const DEFAULT_COLUMNS = 7;
@@ -35,7 +39,10 @@ const initialState = (): RoomState => ({
 });
 
 export class GameRoom implements DurableObject {
-  constructor(private readonly ctx: DurableObjectState, private readonly env: Env) {}
+  constructor(
+    private readonly ctx: DurableObjectState,
+    private readonly env: Env,
+  ) {}
 
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get("Upgrade") !== "websocket") {
@@ -44,12 +51,20 @@ export class GameRoom implements DurableObject {
 
     // getWebSockets("player") returns only accepted, non-rejected connections.
     const existing = this.ctx.getWebSockets("player");
-    const [client, server] = Object.values(new WebSocketPair()) as [WebSocket, WebSocket];
+    const [client, server] = Object.values(new WebSocketPair()) as [
+      WebSocket,
+      WebSocket,
+    ];
 
     if (existing.length >= 2) {
       // Accept briefly so we can send the error, then close.
       this.ctx.acceptWebSocket(server, ["rejected"]);
-      server.send(JSON.stringify({ type: "error", message: "Room is full" } as ServerMessage));
+      server.send(
+        JSON.stringify({
+          type: "error",
+          message: "Room is full",
+        } as ServerMessage),
+      );
       server.close(1008, "Room is full");
       return new Response(null, { status: 101, webSocket: client });
     }
@@ -67,7 +82,13 @@ export class GameRoom implements DurableObject {
       await this.saveState(state);
     }
 
-    server.send(JSON.stringify({ type: "welcome", player, roomState: state } as ServerMessage));
+    server.send(
+      JSON.stringify({
+        type: "welcome",
+        player,
+        roomState: state,
+      } as ServerMessage),
+    );
 
     if (existing.length === 1) {
       const newState: RoomState = { ...state, phase: "playing" };
@@ -99,12 +120,18 @@ export class GameRoom implements DurableObject {
       newValues[cell] = player;
 
       const winningCells = Object.values(
-        checkCell(cell, { columns: state.columns, rows: state.rows, values: newValues }),
+        checkCell(cell, {
+          columns: state.columns,
+          rows: state.rows,
+          values: newValues,
+        }),
       )
         .filter((dir) => dir.length > 3)
         .flat();
 
-      winningCells.forEach((i) => { newValues[i] = `${player}-win`; });
+      winningCells.forEach((i) => {
+        newValues[i] = `${player}-win`;
+      });
 
       let winner: RoomState["winner"] = state.winner;
       let nextPlayer: Player = state.currentPlayer;
@@ -121,7 +148,13 @@ export class GameRoom implements DurableObject {
         nextPlayer = allPlayers[(idx + 1) % 2] ?? PLAYER_ONE;
       }
 
-      state = { ...state, values: newValues, currentPlayer: nextPlayer, winner, phase };
+      state = {
+        ...state,
+        values: newValues,
+        currentPlayer: nextPlayer,
+        winner,
+        phase,
+      };
       await this.saveState(state);
       this.broadcast({ type: "state_update", roomState: state });
     }

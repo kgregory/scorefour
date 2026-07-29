@@ -7,7 +7,9 @@ interface StartScreenProps {
 export const StartScreen = ({ onPlay }: StartScreenProps) => (
   <div className="flex flex-col items-center gap-8">
     <div className="container px-4 pt-8">
-      <h1 className="text-4xl font-extrabold tracking-tight text-slate-700">Score Four</h1>
+      <h1 className="text-4xl font-extrabold tracking-tight text-slate-700">
+        Score Four
+      </h1>
     </div>
     <DecorativeBoard />
     <button

@@ -4,8 +4,9 @@ import { useSetRoomCode } from "~/context/GameState";
 const UNAMBIGUOUS = "ACDEFGHJKMNPQRTUVWXYZ23456789";
 
 const generateRoomCode = () =>
-  Array.from({ length: 6 }, () =>
-    UNAMBIGUOUS[Math.floor(Math.random() * UNAMBIGUOUS.length)],
+  Array.from(
+    { length: 6 },
+    () => UNAMBIGUOUS[Math.floor(Math.random() * UNAMBIGUOUS.length)],
   ).join("");
 
 type LobbyView = "choose" | "creating" | "joining";
@@ -17,10 +18,17 @@ interface LobbyScreenProps {
   errorMessage?: string | null;
 }
 
-export const LobbyScreen = ({ opponentConnected, onBack, initialRoomCode, errorMessage }: LobbyScreenProps) => {
+export const LobbyScreen = ({
+  opponentConnected,
+  onBack,
+  initialRoomCode,
+  errorMessage,
+}: LobbyScreenProps) => {
   const setRoomCode = useSetRoomCode();
 
-  const [view, setView] = useState<LobbyView>(initialRoomCode ? "joining" : "choose");
+  const [view, setView] = useState<LobbyView>(
+    initialRoomCode ? "joining" : "choose",
+  );
   const [code, setCode] = useState(initialRoomCode ?? "");
   const [joinInput, setJoinInput] = useState(initialRoomCode ?? "");
   const [copied, setCopied] = useState(false);
@@ -112,9 +120,13 @@ export const LobbyScreen = ({ opponentConnected, onBack, initialRoomCode, errorM
             {copied ? "Copied!" : "Copy Link"}
           </button>
           {opponentConnected ? (
-            <p className="font-semibold text-green-600">Opponent connected! Starting...</p>
+            <p className="font-semibold text-green-600">
+              Opponent connected! Starting...
+            </p>
           ) : (
-            <p className="animate-pulse text-slate-500">Waiting for opponent...</p>
+            <p className="animate-pulse text-slate-500">
+              Waiting for opponent...
+            </p>
           )}
           <button
             onClick={handleBack}
@@ -127,15 +139,22 @@ export const LobbyScreen = ({ opponentConnected, onBack, initialRoomCode, errorM
 
       {view === "joining" && (
         <div className="flex flex-col items-center gap-4">
-          <p className="text-lg font-semibold text-slate-600">Enter the room code:</p>
+          <p className="text-lg font-semibold text-slate-600">
+            Enter the room code:
+          </p>
           <input
             type="text"
             value={joinInput}
             onChange={(e) => {
               setJoinInput(e.target.value.toUpperCase());
-              if (code !== "") { setCode(""); setRoomCode(null); }
+              if (code !== "") {
+                setCode("");
+                setRoomCode(null);
+              }
             }}
-            onKeyDown={(e) => { if (e.key === "Enter") handleJoin(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleJoin();
+            }}
             maxLength={6}
             placeholder="ABC123"
             className="rounded border border-slate-300 px-4 py-2 text-center text-2xl font-bold uppercase tracking-widest shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -150,12 +169,15 @@ export const LobbyScreen = ({ opponentConnected, onBack, initialRoomCode, errorM
           </button>
           {errorMessage ? (
             <p className="text-sm font-medium text-red-600">{errorMessage}</p>
-          ) : code !== "" && (
-            opponentConnected ? (
-              <p className="font-semibold text-green-600">Connected! Starting...</p>
+          ) : (
+            code !== "" &&
+            (opponentConnected ? (
+              <p className="font-semibold text-green-600">
+                Connected! Starting...
+              </p>
             ) : (
               <p className="animate-pulse text-slate-500">Connecting...</p>
-            )
+            ))
           )}
           <button
             onClick={handleBack}

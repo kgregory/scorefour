@@ -7,10 +7,14 @@ interface PlayScreenProps {
 export const PlayScreen = ({ onLocal, onOnline, onBack }: PlayScreenProps) => (
   <div className="flex flex-col items-center gap-8">
     <div className="container px-4 pt-8">
-      <h1 className="text-4xl font-extrabold tracking-tight text-slate-700">Score Four</h1>
+      <h1 className="text-4xl font-extrabold tracking-tight text-slate-700">
+        Score Four
+      </h1>
     </div>
     <div className="flex flex-col items-center gap-4">
-      <p className="text-lg font-semibold text-slate-600">How do you want to play?</p>
+      <p className="text-lg font-semibold text-slate-600">
+        How do you want to play?
+      </p>
       <div className="flex gap-4">
         <button
           onClick={onLocal}

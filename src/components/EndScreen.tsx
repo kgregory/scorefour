@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { PLAYER_ONE } from "~/utils/constants";
-import { useGameMode, usePlayers, useWinner, useWasQuit, useValues, useColumns, useRows } from "~/context/GameState";
+import {
+  useGameMode,
+  usePlayers,
+  useWinner,
+  useWasQuit,
+  useValues,
+  useColumns,
+  useRows,
+} from "~/context/GameState";
 import { BoardDisplay } from "./BoardDisplay";
 import { Circle } from "./Circle";
 import type { BoardValue, GameMode, Player, Players } from "~/utils/types";
@@ -24,7 +32,14 @@ interface EndSnapshot {
   gameMode: GameMode;
 }
 
-export const EndScreen = ({ onPlayAgain, onBack, onQuitOnline, opponentConnected, opponentLeft, localPlayer }: EndScreenProps) => {
+export const EndScreen = ({
+  onPlayAgain,
+  onBack,
+  onQuitOnline,
+  opponentConnected,
+  opponentLeft,
+  localPlayer,
+}: EndScreenProps) => {
   // Freeze all result state at mount so nothing shifts during the fade-out transition.
   const liveGameMode = useGameMode();
   const liveWinner = useWinner();
@@ -49,17 +64,27 @@ export const EndScreen = ({ onPlayAgain, onBack, onQuitOnline, opponentConnected
 
   const winMessage =
     localPlayer != null
-      ? winner === localPlayer ? "You win!" : "You lose."
-      : players === 1 && winner === PLAYER_ONE ? "You win!"
-      : winner != null && winner !== "draw" ? `${winner} wins!`
-      : "";
+      ? winner === localPlayer
+        ? "You win!"
+        : "You lose."
+      : players === 1 && winner === PLAYER_ONE
+        ? "You win!"
+        : winner != null && winner !== "draw"
+          ? `${winner} wins!`
+          : "";
 
   return (
     <div className="flex flex-col items-center gap-8">
       <div className="container px-4 pt-8">
-        <h1 className="text-4xl font-extrabold tracking-tight text-slate-700">Score Four</h1>
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-700">
+          Score Four
+        </h1>
       </div>
-      <BoardDisplay values={snap.values} columns={snap.columns} rows={snap.rows} />
+      <BoardDisplay
+        values={snap.values}
+        columns={snap.columns}
+        rows={snap.rows}
+      />
       <div className="flex flex-col items-center gap-3">
         {wasQuit != null ? (
           <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
@@ -70,7 +95,11 @@ export const EndScreen = ({ onPlayAgain, onBack, onQuitOnline, opponentConnected
           <p className="text-2xl font-bold text-slate-700">It&apos;s a draw!</p>
         ) : winner != null ? (
           <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
-            <Circle color={localPlayer ?? winner} isEmphasized={false} isDense />
+            <Circle
+              color={localPlayer ?? winner}
+              isEmphasized={false}
+              isDense
+            />
             <span>{winMessage}</span>
           </div>
         ) : null}

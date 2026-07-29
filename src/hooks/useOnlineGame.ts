@@ -161,5 +161,13 @@ export const useOnlineGame = (): OnlineGameState => {
     socketRef.current?.send(JSON.stringify({ type: "reset" }));
   }, []);
 
-  return { localPlayer, opponentConnected, opponentLeft, errorMessage, dropPiece, quitOnline, resetOnline };
+  return {
+    localPlayer,
+    opponentConnected,
+    opponentLeft,
+    errorMessage,
+    dropPiece,
+    quitOnline,
+    resetOnline,
+  };
 };

@@ -12,7 +12,12 @@ import { useSinglePlayerOpponent } from "~/hooks/useSinglePlayerOpponent";
 import { useResultReaction } from "~/hooks/useResultReaction";
 import { useUpdateGameState } from "~/hooks/useUpdateGameState";
 import { useOnlineGame } from "~/hooks/useOnlineGame";
-import { PLAYER_ONE, PLAYER_TWO, PLAYER_THREE, PLAYER_FOUR } from "~/utils/constants";
+import {
+  PLAYER_ONE,
+  PLAYER_TWO,
+  PLAYER_THREE,
+  PLAYER_FOUR,
+} from "~/utils/constants";
 import type { Screen } from "~/utils/types";
 import { Circle } from "~/components/Circle";
 import {
@@ -49,7 +54,15 @@ const Game = () => {
   const [urlRoomCode, setUrlRoomCode] = useState<string | null>(null);
   const checkedUrlRef = useRef(false);
 
-  const { localPlayer, opponentConnected, opponentLeft, errorMessage, dropPiece, quitOnline, resetOnline } = useOnlineGame();
+  const {
+    localPlayer,
+    opponentConnected,
+    opponentLeft,
+    errorMessage,
+    dropPiece,
+    quitOnline,
+    resetOnline,
+  } = useOnlineGame();
 
   useResultReaction({
     firstPlayer: PLAYER_ONE,
@@ -74,7 +87,10 @@ const Game = () => {
   useEffect(() => {
     if (checkedUrlRef.current || !router.isReady) return;
     checkedUrlRef.current = true;
-    const room = typeof router.query.room === "string" ? router.query.room.trim().toUpperCase() : null;
+    const room =
+      typeof router.query.room === "string"
+        ? router.query.room.trim().toUpperCase()
+        : null;
     if (room && room.length >= 6) {
       setUrlRoomCode(room);
       setGameMode("online");
@@ -82,19 +98,25 @@ const Game = () => {
       setScreen("online-play");
       void router.replace(router.pathname, undefined, { shallow: true });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady]);
 
   const handlePlay = useCallback(() => setScreen("play"), [setScreen]);
   const handleBackToStart = useCallback(() => setScreen("start"), [setScreen]);
-  const handleBackFromLocalPlay = useCallback(() => setScreen("play"), [setScreen]);
+  const handleBackFromLocalPlay = useCallback(
+    () => setScreen("play"),
+    [setScreen],
+  );
   const handleBackFromOnlineLobby = useCallback(() => {
     setUrlRoomCode(null);
     setGameMode("local");
     setScreen("play");
   }, [setGameMode, setScreen]);
 
-  const handlePlayLocal = useCallback(() => setScreen("local-play"), [setScreen]);
+  const handlePlayLocal = useCallback(
+    () => setScreen("local-play"),
+    [setScreen],
+  );
 
   const handlePlayOnline = useCallback(() => {
     setUrlRoomCode(null);
@@ -161,17 +183,24 @@ const Game = () => {
     <div
       className={`transition-opacity duration-200 ${animating ? "opacity-0" : "opacity-100"}`}
     >
-      {displayedScreen === "start" && (
-        <StartScreen onPlay={handlePlay} />
-      )}
+      {displayedScreen === "start" && <StartScreen onPlay={handlePlay} />}
       {displayedScreen === "play" && (
-        <PlayScreen onLocal={handlePlayLocal} onOnline={handlePlayOnline} onBack={handleBackToStart} />
+        <PlayScreen
+          onLocal={handlePlayLocal}
+          onOnline={handlePlayOnline}
+          onBack={handleBackToStart}
+        />
       )}
       {displayedScreen === "local-play" && (
         <LocalPlayScreen onStart={startGame} onBack={handleBackFromLocalPlay} />
       )}
       {displayedScreen === "online-play" && (
-        <LobbyScreen opponentConnected={opponentConnected} onBack={handleBackFromOnlineLobby} initialRoomCode={urlRoomCode} errorMessage={errorMessage} />
+        <LobbyScreen
+          opponentConnected={opponentConnected}
+          onBack={handleBackFromOnlineLobby}
+          initialRoomCode={urlRoomCode}
+          errorMessage={errorMessage}
+        />
       )}
       {displayedScreen === "playing" && (
         <div className="flex flex-col items-center gap-8">
@@ -181,7 +210,9 @@ const Game = () => {
             </h1>
             <div
               className="grid gap-4"
-              style={{ gridTemplateColumns: `repeat(${players < 3 ? 2 : players}, 1fr)` }}
+              style={{
+                gridTemplateColumns: `repeat(${players < 3 ? 2 : players}, 1fr)`,
+              }}
             >
               <Circle color={PLAYER_ONE} isDense />
               <Circle color={PLAYER_TWO} isDense />
@@ -200,7 +231,9 @@ const Game = () => {
                   <span className="text-slate-400">Opponent&apos;s turn</span>
                 )
               ) : (
-                <span className="capitalize">It&apos;s {currentPlayer}&apos;s turn</span>
+                <span className="capitalize">
+                  It&apos;s {currentPlayer}&apos;s turn
+                </span>
               )}
             </div>
             {gameMode === "online" ? (
@@ -235,7 +268,10 @@ export default function Home() {
     <>
       <Head>
         <title>Score Four</title>
-        <meta name="description" content="A fake board game called Score Four." />
+        <meta
+          name="description"
+          content="A fake board game called Score Four."
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-start bg-gradient-to-b from-white to-gray-100">

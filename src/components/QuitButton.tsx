@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { useCurrentPlayer, useSetScreen, useSetWasQuit } from "~/context/GameState";
+import {
+  useCurrentPlayer,
+  useSetScreen,
+  useSetWasQuit,
+} from "~/context/GameState";
 
 export const QuitButton = () => {
   const setScreen = useSetScreen();
