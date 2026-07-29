@@ -230,11 +230,13 @@ const Game = () => {
                 ) : (
                   <span className="text-slate-400">Opponent&apos;s turn</span>
                 )
-              ) : (
-                <span className="capitalize">
-                  It&apos;s {currentPlayer}&apos;s turn
+              ) : screen === "playing" ? (
+                <span>
+                  It&apos;s{" "}
+                  <span className="capitalize">{currentPlayer}</span>
+                  &apos;s turn
                 </span>
-              )}
+              ) : null}
             </div>
             {gameMode === "online" ? (
               <button
