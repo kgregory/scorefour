@@ -47,6 +47,10 @@ export const useOnlineGame = (): OnlineGameState => {
   // Tracks whether this game session has reached an ended state so opponent_left
   // doesn't pull a player off the result screen with no explanation.
   const gameEndedRef = useRef(false);
+  // Tracks whether we have ever received a welcome from this room. Used to
+  // distinguish a reconnect race ("Room is full" because old socket not yet
+  // cleaned up) from a genuine rejection (3rd person trying to join a full room).
+  const hasConnectedRef = useRef(false);
 
   const syncState = useCallback(
     (state: RoomState) => {
@@ -66,6 +70,7 @@ export const useOnlineGame = (): OnlineGameState => {
     setErrorMessage(null);
     setOpponentLeft(false);
     gameEndedRef.current = false;
+    hasConnectedRef.current = false;
 
     const socket = new PartySocket({
       host: env.NEXT_PUBLIC_PARTYKIT_HOST,
@@ -77,6 +82,8 @@ export const useOnlineGame = (): OnlineGameState => {
       const msg = JSON.parse(event.data) as ServerMessage;
 
       if (msg.type === "welcome") {
+        hasConnectedRef.current = true;
+        setErrorMessage(null); // clear any stale error from a reconnect attempt
         setLocalPlayer(msg.player);
         syncState(msg.roomState);
         if (msg.roomState.phase === "playing") {
@@ -127,8 +134,12 @@ export const useOnlineGame = (): OnlineGameState => {
 
       if (msg.type === "error") {
         setErrorMessage(msg.message);
-        // Calling close() on the client prevents partysocket's auto-reconnect loop.
-        socket.close();
+        // Only stop reconnecting for a genuine rejection (never successfully joined).
+        // If we already had a welcome, the error is likely a reconnect race where the
+        // old socket hasn't been cleaned up yet — let partysocket retry automatically.
+        if (!hasConnectedRef.current) {
+          socket.close();
+        }
       }
     });
 
