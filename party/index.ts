@@ -15,12 +15,12 @@ export interface Env {
   GAME_ROOM: DurableObjectNamespace;
 }
 
-// Worker entry point: routes /party/{room} WebSocket upgrades to the right Durable Object.
-// partysocket connects to {host}/party/{room} by default, so this path matches.
+// Worker entry point: routes WebSocket upgrades to the right Durable Object.
+// partysocket v1.x connects to /parties/{name}/{room} (name defaults to "main").
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    const match = url.pathname.match(/^\/party\/([^/]+)$/i);
+    const match = url.pathname.match(/^\/parties\/[^/]+\/([^/]+)$/i);
     if (!match) return new Response("Not found", { status: 404 });
     const roomId = match[1]!.toUpperCase();
     const id = env.GAME_ROOM.idFromName(roomId);
