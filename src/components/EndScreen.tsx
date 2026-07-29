@@ -30,6 +30,7 @@ interface EndSnapshot {
   wasQuit: Player | null;
   players: Players;
   gameMode: GameMode;
+  localPlayer: Player | null;
 }
 
 export const EndScreen = ({
@@ -56,15 +57,16 @@ export const EndScreen = ({
     values: [...liveValues],
     columns: liveColumns,
     rows: liveRows,
+    localPlayer: localPlayer ?? null,
   }));
 
-  const { winner, wasQuit, players, gameMode } = snap;
+  const { winner, wasQuit, players, gameMode, localPlayer: snapLocalPlayer } = snap;
 
   const showPlayAgain = gameMode === "online" && !!opponentConnected;
 
   const winMessage =
-    localPlayer != null
-      ? winner === localPlayer
+    snapLocalPlayer != null
+      ? winner === snapLocalPlayer
         ? "You win!"
         : "You lose."
       : players === 1 && winner === PLAYER_ONE
@@ -96,7 +98,7 @@ export const EndScreen = ({
         ) : winner != null ? (
           <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
             <Circle
-              color={localPlayer ?? winner}
+              color={snapLocalPlayer ?? winner}
               isEmphasized={false}
               isDense
             />
