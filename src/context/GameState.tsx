@@ -8,8 +8,7 @@ import {
 } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { PLAYER_ONE, DEFAULT_COLUMNS, DEFAULT_ROWS } from "~/utils/constants";
-import type { Players, Screen, Difficulty } from "~/utils/types";
-import type { BoardValue, Player } from "~/utils/types";
+import type { BoardValue, Player, Players, Screen, Difficulty, GameMode } from "~/utils/types";
 
 type Values = Array<BoardValue>;
 type Winner = Player | "draw" | null;
@@ -23,6 +22,8 @@ const WinnerContext = createContext<Winner | undefined>(undefined);
 const DifficultyContext = createContext<Difficulty | undefined>(undefined);
 const ScreenContext = createContext<Screen | undefined>(undefined);
 const WasQuitContext = createContext<Player | null | undefined>(undefined);
+const GameModeContext = createContext<GameMode | undefined>(undefined);
+const RoomCodeContext = createContext<string | null | undefined>(undefined);
 
 type ContextSetter<TValue> = Dispatch<SetStateAction<TValue>> | undefined;
 
@@ -35,6 +36,8 @@ const SetWinnerContext = createContext<ContextSetter<Winner>>(undefined);
 const SetDifficultyContext = createContext<ContextSetter<Difficulty>>(undefined);
 const SetScreenContext = createContext<ContextSetter<Screen>>(undefined);
 const SetWasQuitContext = createContext<ContextSetter<Player | null>>(undefined);
+const SetGameModeContext = createContext<ContextSetter<GameMode>>(undefined);
+const SetRoomCodeContext = createContext<ContextSetter<string | null>>(undefined);
 
 interface GameStateProviderProps {
   children: React.ReactNode;
@@ -52,16 +55,20 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [screen, setScreen] = useState<Screen>("start");
   const [wasQuit, setWasQuit] = useState<Player | null>(null);
+  const [gameMode, setGameMode] = useState<GameMode>("local");
+  const [roomCode, setRoomCode] = useState<string | null>(null);
 
   const screenRef = useRef(screen);
   screenRef.current = screen;
 
   // Dimension changes: resize the board and reset turn order.
+  // Skip in online mode — the server is authoritative and syncState handles the board.
   useEffect(() => {
     if (screenRef.current === "ended") return;
+    if (gameMode === "online") return;
     setValues(Array<BoardValue>(rows * columns).fill(undefined));
     setCurrentPlayer(PLAYER_ONE);
-  }, [columns, rows]);
+  }, [columns, rows, gameMode]);
 
   // Player count change: reset the board but keep the current turn.
   useEffect(() => {
@@ -88,7 +95,15 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
                                   <SetScreenContext.Provider value={setScreen}>
                                     <WasQuitContext.Provider value={wasQuit}>
                                       <SetWasQuitContext.Provider value={setWasQuit}>
-                                        {props.children}
+                                        <GameModeContext.Provider value={gameMode}>
+                                          <SetGameModeContext.Provider value={setGameMode}>
+                                            <RoomCodeContext.Provider value={roomCode}>
+                                              <SetRoomCodeContext.Provider value={setRoomCode}>
+                                                {props.children}
+                                              </SetRoomCodeContext.Provider>
+                                            </RoomCodeContext.Provider>
+                                          </SetGameModeContext.Provider>
+                                        </GameModeContext.Provider>
                                       </SetWasQuitContext.Provider>
                                     </WasQuitContext.Provider>
                                   </SetScreenContext.Provider>
@@ -191,6 +206,24 @@ export const useWasQuit = () => {
   return context;
 };
 
+/** get the current game mode (local or online) */
+export const useGameMode = () => {
+  const context = useContext(GameModeContext);
+  if (context === undefined) {
+    throw new Error("useGameMode must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get the current online room code, if any */
+export const useRoomCode = () => {
+  const context = useContext(RoomCodeContext);
+  if (context === undefined) {
+    throw new Error("useRoomCode must be used within a GameStateProvider");
+  }
+  return context;
+};
+
 /** get the setter for the number of players from context */
 export const useSetPlayers = () => {
   const context = useContext(SetPlayersContext);
@@ -270,6 +303,24 @@ export const useSetWasQuit = () => {
   const context = useContext(SetWasQuitContext);
   if (context === undefined) {
     throw new Error("useSetWasQuit must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get the setter for the game mode from context */
+export const useSetGameMode = () => {
+  const context = useContext(SetGameModeContext);
+  if (context === undefined) {
+    throw new Error("useSetGameMode must be used within a GameStateProvider");
+  }
+  return context;
+};
+
+/** get the setter for the room code from context */
+export const useSetRoomCode = () => {
+  const context = useContext(SetRoomCodeContext);
+  if (context === undefined) {
+    throw new Error("useSetRoomCode must be used within a GameStateProvider");
   }
   return context;
 };
