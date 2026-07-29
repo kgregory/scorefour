@@ -222,22 +222,24 @@ const Game = () => {
           </div>
           <ConnectedBoard handleTurn={isYourTurn ? handleTurn : undefined} />
           <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
-              <Circle color={currentPlayer} isEmphasized={false} isDense />
-              {gameMode === "online" ? (
-                isYourTurn ? (
-                  <span>Your turn</span>
+            {screen === "playing" && (
+              <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
+                <Circle color={currentPlayer} isEmphasized={false} isDense />
+                {gameMode === "online" ? (
+                  isYourTurn ? (
+                    <span>Your turn</span>
+                  ) : (
+                    <span className="text-slate-400">Opponent&apos;s turn</span>
+                  )
                 ) : (
-                  <span className="text-slate-400">Opponent&apos;s turn</span>
-                )
-              ) : screen === "playing" ? (
-                <span>
-                  It&apos;s{" "}
-                  <span className="capitalize">{currentPlayer}</span>
-                  &apos;s turn
-                </span>
-              ) : null}
-            </div>
+                  <span>
+                    It&apos;s{" "}
+                    <span className="capitalize">{currentPlayer}</span>
+                    &apos;s turn
+                  </span>
+                )}
+              </div>
+            )}
             {gameMode === "online" ? (
               <button
                 onClick={handleQuit}
