@@ -39,35 +39,51 @@ export const GameSettings = () => {
       {settingsVisible && (
         <div className="grid grid-cols-[auto_auto] items-center gap-x-4 gap-y-1 text-sm">
           <label htmlFor="players">Players</label>
-          <select className="w-24"
+          <select
+            className="w-24"
             id="players"
             value={players}
-            onChange={(e) => setPlayers(parseInt(e.target.value, 10) as Players)}
+            onChange={(e) =>
+              setPlayers(parseInt(e.target.value, 10) as Players)
+            }
           >
             {Array.from({ length: allPlayers.length }, (_, i) => (
-              <option key={i + 1} value={i + 1}>{i + 1}</option>
+              <option key={i + 1} value={i + 1}>
+                {i + 1}
+              </option>
             ))}
           </select>
           <label htmlFor="columns">Columns</label>
-          <select className="w-24"
+          <select
+            className="w-24"
             id="columns"
             value={columns}
             onChange={(e) => setColumns(parseInt(e.target.value, 10))}
           >
-            {BOARD_DIM_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+            {BOARD_DIM_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
           </select>
           <label htmlFor="rows">Rows</label>
-          <select className="w-24"
+          <select
+            className="w-24"
             id="rows"
             value={rows}
             onChange={(e) => setRows(parseInt(e.target.value, 10))}
           >
-            {BOARD_DIM_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+            {BOARD_DIM_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
           </select>
           {players === 1 && (
             <>
               <label htmlFor="difficulty">Difficulty</label>
-              <select className="w-24"
+              <select
+                className="w-24"
                 id="difficulty"
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as Difficulty)}

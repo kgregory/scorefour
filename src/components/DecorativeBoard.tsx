@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { PLAYER_ONE, PLAYER_TWO, PLAYER_THREE, PLAYER_FOUR } from "~/utils/constants";
+import {
+  PLAYER_ONE,
+  PLAYER_TWO,
+  PLAYER_THREE,
+  PLAYER_FOUR,
+} from "~/utils/constants";
 import type { PlayerColor } from "~/utils/types";
 import { useColumns, useRows } from "~/context/GameState";
 import { Circle } from "./Circle";
@@ -14,7 +19,11 @@ const spanStart = (center: number, size: number): number =>
 
 // Returns the set of cell indices for the current phase's winning pattern.
 // Phases cycle like the ASCII spinner: | / — \
-const getPatternCells = (cols: number, rows: number, phase: number): Set<number> => {
+const getPatternCells = (
+  cols: number,
+  rows: number,
+  phase: number,
+): Set<number> => {
   const cc = Math.floor(cols / 2);
   const cr = Math.floor(rows / 2);
   const sc = spanStart(cc, cols);
@@ -54,20 +63,20 @@ export const DecorativeBoard = () => {
   return (
     <BoardShell columns={columns}>
       {Array.from({ length: columns * rows }, (_, i) => {
-          const row = Math.floor(i / columns);
-          const isWinner = patternCells.has(i);
-          const color: PlayerColor = isWinner
-            ? PLAYER_ONE
-            : STRIPE_COLORS[row % STRIPE_COLORS.length]!;
-          return (
-            <Circle
-              key={i}
-              color={color}
-              isEmphasized={false}
-              isWinner={isWinner}
-            />
-          );
-        })}
+        const row = Math.floor(i / columns);
+        const isWinner = patternCells.has(i);
+        const color: PlayerColor = isWinner
+          ? PLAYER_ONE
+          : STRIPE_COLORS[row % STRIPE_COLORS.length]!;
+        return (
+          <Circle
+            key={i}
+            color={color}
+            isEmphasized={false}
+            isWinner={isWinner}
+          />
+        );
+      })}
     </BoardShell>
   );
 };

@@ -4,6 +4,8 @@ import { usePlayers, useWinner } from "~/context/GameState";
 
 interface UseResultReactionParams {
   firstPlayer: string;
+  /** in online mode, the player assigned to this device; overrides the multiplayer "everyone wins" logic */
+  localPlayer?: string | null;
 }
 
 /** canvas-confetti uses OffscreenCanvas, we'll skip it if it's not supported */
@@ -46,7 +48,7 @@ const showEmojiConfetti = (shapes: confetti.Shape[]) => {
 
 /** handle the animated reaction that occurs when the game is over */
 export const useResultReaction = (params: UseResultReactionParams) => {
-  const { firstPlayer } = params;
+  const { firstPlayer, localPlayer } = params;
 
   const players = usePlayers();
   const winner = useWinner();
@@ -54,7 +56,12 @@ export const useResultReaction = (params: UseResultReactionParams) => {
   const isDraw = winner === "draw";
   const isVictorious = !isDraw && winner != null;
   const isMultiplayer = players > 1;
-  const isHuman = isMultiplayer || (!isMultiplayer && winner === firstPlayer);
+  // In online mode localPlayer tells us which side this device is — only joyous if you won.
+  // In local multiplayer everyone sees the happy reaction. In single-player only P1 winning is joyous.
+  const isHuman =
+    localPlayer != null
+      ? winner === localPlayer
+      : isMultiplayer || winner === firstPlayer;
   const isJoyous = isVictorious && isHuman;
   const isDismal = isVictorious && !isHuman;
 

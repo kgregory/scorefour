@@ -115,12 +115,15 @@ const evaluate = <TValue>(
 // Sort all columns center-out once for a given board width; order never changes during a search.
 const getSortedColumnOrder = (columns: number): number[] => {
   const center = Math.floor(columns / 2);
-  return Array.from({ length: columns }, (_, i) => i)
-    .sort((a, b) => Math.abs(a - center) - Math.abs(b - center));
+  return Array.from({ length: columns }, (_, i) => i).sort(
+    (a, b) => Math.abs(a - center) - Math.abs(b - center),
+  );
 };
 
-const getValidColumns = <TValue>(sortedOrder: number[], board: Board<TValue>): number[] =>
-  sortedOrder.filter((c) => board.values[c] == null);
+const getValidColumns = <TValue>(
+  sortedOrder: number[],
+  board: Board<TValue>,
+): number[] => sortedOrder.filter((c) => board.values[c] == null);
 
 // Always maximizes from the current player's perspective; negate the result at each level.
 const negamax = <TValue>(
@@ -166,7 +169,10 @@ const getReactiveMove = <TValue>(
   opponentValue: TValue,
   board: Board<TValue>,
 ): number | undefined => {
-  const validColumns = getValidColumns(getSortedColumnOrder(board.columns), board);
+  const validColumns = getValidColumns(
+    getSortedColumnOrder(board.columns),
+    board,
+  );
   if (validColumns.length === 0) return undefined;
 
   for (const column of validColumns) {
@@ -202,7 +208,12 @@ export const getBestMove = <TValue>(
   // Clamp at strategy.depth so small boards don't upscale beyond the configured difficulty.
   const scaledDepth = Math.min(
     strategy.depth,
-    Math.max(MIN_AI_DEPTH, Math.round(strategy.depth * DEFAULT_BOARD_CELLS / (board.rows * board.columns))),
+    Math.max(
+      MIN_AI_DEPTH,
+      Math.round(
+        (strategy.depth * DEFAULT_BOARD_CELLS) / (board.rows * board.columns),
+      ),
+    ),
   );
 
   let bestColumn: number = validColumns[0]!;
