@@ -1,8 +1,16 @@
 import { useState } from "react";
 import { PLAYER_ONE } from "~/utils/constants";
-import { usePlayers, useWinner, useWasQuit, useValues, useColumns, useRows } from "~/context/GameState";
-import { BoardDisplay } from "./BoardDisplay";
+import {
+  usePlayers,
+  useWinner,
+  useWasQuit,
+  useValues,
+  useColumns,
+  useRows,
+} from "~/context/GameState";
+import { Board } from "./Board";
 import { Circle } from "./Circle";
+import { Heading } from "./Heading";
 import { GameSettings } from "./GameSettings";
 import type { BoardValue, Player, Players } from "~/utils/types";
 
@@ -40,22 +48,20 @@ export const EndScreen = ({ onPlayAgain }: EndScreenProps) => {
 
   const isTryAgain =
     players === 1 &&
-    (wasQuit != null || (winner !== null && winner !== "draw" && winner !== PLAYER_ONE));
+    (wasQuit != null ||
+      (winner !== null && winner !== "draw" && winner !== PLAYER_ONE));
 
   return (
     <div className="flex flex-col items-center gap-8">
-      <div className="container flex items-center justify-between px-4 pt-8">
-        <h1 className="text-4xl font-extrabold tracking-tight text-slate-700">
-          Score Four
-        </h1>
+      <Heading>
         <button
           onClick={onPlayAgain}
           className="rounded bg-blue-600 px-6 py-2 font-semibold text-white shadow hover:bg-blue-700"
         >
           {isTryAgain ? "Try Again" : "Play Again"}
         </button>
-      </div>
-      <BoardDisplay values={snap.values} columns={snap.columns} rows={snap.rows} />
+      </Heading>
+      <Board values={snap.values} columns={snap.columns} rows={snap.rows} />
       <div className="flex flex-col items-center gap-3">
         {wasQuit != null ? (
           <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
@@ -68,7 +74,9 @@ export const EndScreen = ({ onPlayAgain }: EndScreenProps) => {
           <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
             <Circle color={winner} isEmphasized={false} isDense />
             <span className="capitalize">
-              {players === 1 && winner === PLAYER_ONE ? "You win!" : `${winner} wins!`}
+              {players === 1 && winner === PLAYER_ONE
+                ? "You win!"
+                : `${winner} wins!`}
             </span>
           </div>
         ) : null}
