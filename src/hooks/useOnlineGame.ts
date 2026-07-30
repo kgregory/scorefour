@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import PartySocket from "partysocket";
 import { env } from "~/env.js";
-import type { Player } from "~/utils/types";
+import type { Player, Players } from "~/utils/types";
 import type { RoomState, ServerMessage } from "~/utils/partyTypes";
 import {
   useGameMode,
   useRoomCode,
   useSetCurrentPlayer,
+  useSetPlayers,
   useSetRows,
   useSetColumns,
   useSetScreen,
@@ -17,12 +18,14 @@ import {
 
 export interface OnlineGameState {
   localPlayer: Player | null;
+  lobbyPlayers: Player[];
   opponentConnected: boolean;
   opponentLeft: boolean;
   errorMessage: string | null;
   dropPiece: (column: number) => void;
   quitOnline: () => void;
   resetOnline: () => void;
+  startGame: () => void;
 }
 
 /** manages the partykit websocket connection for online multiplayer */
@@ -32,6 +35,7 @@ export const useOnlineGame = (): OnlineGameState => {
 
   const setValues = useSetValues();
   const setCurrentPlayer = useSetCurrentPlayer();
+  const setPlayers = useSetPlayers();
   const setWinner = useSetWinner();
   const setWasQuit = useSetWasQuit();
   const setScreen = useSetScreen();
@@ -39,11 +43,13 @@ export const useOnlineGame = (): OnlineGameState => {
   const setColumns = useSetColumns();
 
   const [localPlayer, setLocalPlayer] = useState<Player | null>(null);
+  const [lobbyPlayers, setLobbyPlayers] = useState<Player[]>([]);
   const [opponentConnected, setOpponentConnected] = useState(false);
   const [opponentLeft, setOpponentLeft] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const socketRef = useRef<PartySocket | null>(null);
+  const localPlayerRef = useRef<Player | null>(null);
   // Tracks whether this game session has reached an ended state so opponent_left
   // doesn't pull a player off the result screen with no explanation.
   const gameEndedRef = useRef(false);
@@ -69,6 +75,7 @@ export const useOnlineGame = (): OnlineGameState => {
     // Clear stale state from any previous session before opening a new connection.
     setErrorMessage(null);
     setOpponentLeft(false);
+    setLobbyPlayers([]);
     gameEndedRef.current = false;
     hasConnectedRef.current = false;
 
@@ -84,21 +91,30 @@ export const useOnlineGame = (): OnlineGameState => {
       if (msg.type === "welcome") {
         hasConnectedRef.current = true;
         setErrorMessage(null); // clear any stale error from a reconnect attempt
+        localPlayerRef.current = msg.player;
         setLocalPlayer(msg.player);
         syncState(msg.roomState);
+        setLobbyPlayers(msg.roomState.lobbyPlayers);
         if (msg.roomState.phase === "playing") {
-          // Reconnect to an active room — opponent is already present.
+          // Reconnect to an active game — transition straight to the board.
+          setPlayers(msg.roomState.gamePlayers.length as Players);
           setScreen("playing");
         } else if (msg.roomState.phase === "ended") {
           // Stale room — server should have reset it, but handle defensively.
           setErrorMessage("This room is no longer available.");
           socket.close();
         }
+        // phase === "lobby": already on the lobby screen; lobbyPlayers updated above
       }
 
       if (msg.type === "state_update") {
         syncState(msg.roomState);
+        if (msg.roomState.phase === "lobby") {
+          setLobbyPlayers(msg.roomState.lobbyPlayers);
+        }
         if (msg.roomState.phase === "playing") {
+          setLobbyPlayers([]);
+          setPlayers(msg.roomState.gamePlayers.length as Players);
           gameEndedRef.current = false;
           setWasQuit(null); // new game started — clear any previous quit state
           setOpponentConnected(true);
@@ -146,13 +162,15 @@ export const useOnlineGame = (): OnlineGameState => {
     return () => {
       socket.close();
       socketRef.current = null;
+      localPlayerRef.current = null;
       setLocalPlayer(null);
+      setLobbyPlayers([]);
       setOpponentConnected(false);
       // errorMessage and opponentLeft are intentionally NOT cleared here — they
       // persist until the next connection attempt so the user can read them.
       gameEndedRef.current = false;
     };
-  }, [gameMode, roomCode, setScreen, setWasQuit, syncState]);
+  }, [gameMode, roomCode, setPlayers, setScreen, setWasQuit, syncState]);
 
   const dropPiece = useCallback((column: number) => {
     socketRef.current?.send(JSON.stringify({ type: "drop_piece", column }));
@@ -172,13 +190,19 @@ export const useOnlineGame = (): OnlineGameState => {
     socketRef.current?.send(JSON.stringify({ type: "reset" }));
   }, []);
 
+  const startGame = useCallback(() => {
+    socketRef.current?.send(JSON.stringify({ type: "start_game" }));
+  }, []);
+
   return {
     localPlayer,
+    lobbyPlayers,
     opponentConnected,
     opponentLeft,
     errorMessage,
     dropPiece,
     quitOnline,
     resetOnline,
+    startGame,
   };
 };

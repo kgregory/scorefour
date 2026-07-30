@@ -4,13 +4,18 @@ export interface RoomState {
   values: BoardValue[];
   currentPlayer: Player;
   winner: Player | "draw" | null;
-  phase: "waiting" | "playing" | "ended";
+  phase: "lobby" | "playing" | "ended";
   rows: number;
   columns: number;
+  /** players connected to the room in join order; first entry is the host */
+  lobbyPlayers: Player[];
+  /** players who were present when the host started; determines turn order */
+  gamePlayers: Player[];
 }
 
 export type ClientMessage =
   | { type: "drop_piece"; column: number }
+  | { type: "start_game" }
   | { type: "reset" }
   | { type: "quit" };
 

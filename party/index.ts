@@ -1,4 +1,4 @@
-import { PLAYER_ONE, PLAYER_TWO, allPlayers } from "../src/utils/constants";
+import { PLAYER_ONE, allPlayers } from "../src/utils/constants";
 import { getLowestEmptyCell } from "../src/utils/getLowestEmptyCell";
 import { checkCell } from "../src/utils/checkCell";
 import type { Player, BoardValue } from "../src/utils/types";
@@ -33,15 +33,17 @@ const initialState = (): RoomState => ({
   values: Array<BoardValue>(DEFAULT_ROWS * DEFAULT_COLUMNS).fill(undefined),
   currentPlayer: PLAYER_ONE,
   winner: null,
-  phase: "waiting",
+  phase: "lobby",
   rows: DEFAULT_ROWS,
   columns: DEFAULT_COLUMNS,
+  lobbyPlayers: [],
+  gamePlayers: [],
 });
 
 export class GameRoom implements DurableObject {
   constructor(
     private readonly ctx: DurableObjectState,
-    private readonly env: Env,
+    _env: Env,
   ) {}
 
   async fetch(request: Request): Promise<Response> {
@@ -56,7 +58,7 @@ export class GameRoom implements DurableObject {
       WebSocket,
     ];
 
-    if (existing.length >= 2) {
+    if (existing.length >= 4) {
       // Accept briefly so we can send the error, then close.
       this.ctx.acceptWebSocket(server, ["rejected"]);
       server.send(
@@ -69,18 +71,34 @@ export class GameRoom implements DurableObject {
       return new Response(null, { status: 101, webSocket: client });
     }
 
-    const player: Player = existing.length === 0 ? PLAYER_ONE : PLAYER_TWO;
-    // Tags: "player" (used to filter connections) + the player color (used as ID).
+    // Assign the first color from allPlayers not already taken by a connected socket.
+    const takenColors = existing
+      .map((ws) =>
+        this.ctx
+          .getTags(ws)
+          .find((t): t is Player =>
+            (allPlayers as readonly string[]).includes(t),
+          ),
+      )
+      .filter((c): c is Player => c !== undefined);
+    const player = allPlayers.find((p) => !takenColors.includes(p))!;
+
     this.ctx.acceptWebSocket(server, ["player", player]);
 
     let state = await this.getState();
 
-    // First player into any non-waiting room: reset so they get a clean room.
-    // Covers both a completed game ("ended") and an abandoned mid-game room ("playing").
-    if (existing.length === 0 && state.phase !== "waiting") {
+    // First player into any non-lobby room: reset so they get a clean room.
+    if (existing.length === 0 && state.phase !== "lobby") {
       state = initialState();
-      await this.saveState(state);
     }
+
+    // Add this player to the lobby list (guard against duplicate on reconnect).
+    const lobbyPlayers: Player[] = [
+      ...state.lobbyPlayers.filter((p) => p !== player),
+      player,
+    ];
+    state = { ...state, lobbyPlayers };
+    await this.saveState(state);
 
     server.send(
       JSON.stringify({
@@ -90,10 +108,9 @@ export class GameRoom implements DurableObject {
       } as ServerMessage),
     );
 
-    if (existing.length === 1) {
-      const newState: RoomState = { ...state, phase: "playing" };
-      await this.saveState(newState);
-      this.broadcast({ type: "state_update", roomState: newState });
+    // Notify existing players that someone joined.
+    if (existing.length > 0) {
+      this.broadcast({ type: "state_update", roomState: state }, [server]);
     }
 
     return new Response(null, { status: 101, webSocket: client });
@@ -105,6 +122,23 @@ export class GameRoom implements DurableObject {
 
     const msg = JSON.parse(message) as ClientMessage;
     let state = await this.getState();
+
+    if (msg.type === "start_game") {
+      if (state.phase !== "lobby") return;
+      if (state.lobbyPlayers.length < 2) return;
+      if (player !== state.lobbyPlayers[0]) return; // only host may start
+      state = {
+        ...state,
+        phase: "playing",
+        gamePlayers: [...state.lobbyPlayers],
+        values: Array<BoardValue>(state.rows * state.columns).fill(undefined),
+        currentPlayer: state.lobbyPlayers[0]!,
+        winner: null,
+      };
+      await this.saveState(state);
+      this.broadcast({ type: "state_update", roomState: state });
+      return;
+    }
 
     if (msg.type === "drop_piece") {
       if (state.phase !== "playing" || state.winner != null) return;
@@ -144,8 +178,10 @@ export class GameRoom implements DurableObject {
         winner = "draw";
         phase = "ended";
       } else {
-        const idx = allPlayers.indexOf(player);
-        nextPlayer = allPlayers[(idx + 1) % 2] ?? PLAYER_ONE;
+        const idx = state.gamePlayers.indexOf(player);
+        nextPlayer =
+          state.gamePlayers[(idx + 1) % state.gamePlayers.length] ??
+          state.gamePlayers[0]!;
       }
 
       state = {
@@ -161,7 +197,13 @@ export class GameRoom implements DurableObject {
 
     if (msg.type === "reset") {
       if (state.phase !== "ended") return;
-      state = { ...initialState(), phase: "playing" };
+      state = {
+        ...state,
+        values: Array<BoardValue>(state.rows * state.columns).fill(undefined),
+        currentPlayer: state.gamePlayers[0] ?? PLAYER_ONE,
+        winner: null,
+        phase: "playing",
+      };
       await this.saveState(state);
       this.broadcast({ type: "state_update", roomState: state });
     }
@@ -182,6 +224,19 @@ export class GameRoom implements DurableObject {
     const player = this.getPlayer(ws);
     if (!player) return;
 
+    const state = await this.getState();
+
+    if (state.phase === "lobby") {
+      const lobbyPlayers = state.lobbyPlayers.filter((p) => p !== player);
+      const newState: RoomState =
+        lobbyPlayers.length === 0
+          ? initialState()
+          : { ...state, lobbyPlayers };
+      await this.saveState(newState);
+      this.broadcast({ type: "state_update", roomState: newState }, [ws]);
+      return;
+    }
+
     const quitPlayer = await this.ctx.storage.get<Player>("quitPlayer");
     if (quitPlayer === player) {
       await this.ctx.storage.delete("quitPlayer");
@@ -194,7 +249,7 @@ export class GameRoom implements DurableObject {
   private getPlayer(ws: WebSocket): Player | undefined {
     return this.ctx
       .getTags(ws)
-      .find((t): t is Player => t === PLAYER_ONE || t === PLAYER_TWO);
+      .find((t): t is Player => t === "red" || t === "yellow" || t === "purple" || t === "green");
   }
 
   private broadcast(msg: ServerMessage, exclude: WebSocket[] = []): void {

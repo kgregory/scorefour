@@ -56,12 +56,14 @@ const Game = () => {
 
   const {
     localPlayer,
+    lobbyPlayers,
     opponentConnected,
     opponentLeft,
     errorMessage,
     dropPiece,
     quitOnline,
     resetOnline,
+    startGame: startOnlineGame,
   } = useOnlineGame();
 
   useResultReaction({
@@ -196,7 +198,9 @@ const Game = () => {
       )}
       {displayedScreen === "online-play" && (
         <LobbyScreen
-          opponentConnected={opponentConnected}
+          lobbyPlayers={lobbyPlayers}
+          localPlayer={localPlayer}
+          onStartGame={startOnlineGame}
           onBack={handleBackFromOnlineLobby}
           initialRoomCode={urlRoomCode}
           errorMessage={errorMessage}
