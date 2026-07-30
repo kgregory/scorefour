@@ -9,9 +9,11 @@ export const allPlayers = [
   PLAYER_FOUR,
 ] as const;
 
+export const DEFAULT_PLAYERS = 2;
 export const DEFAULT_COLUMNS = 7;
 export const DEFAULT_ROWS = 6;
 export const DEFAULT_BOARD_CELLS = DEFAULT_COLUMNS * DEFAULT_ROWS;
+export const DEFAULT_DIFFICULTY = "medium";
 
 export const MIN_BOARD_DIM = 4;
 export const MAX_BOARD_DIM = 9;

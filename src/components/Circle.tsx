@@ -6,6 +6,7 @@ export interface CircleProps {
   isEmphasized?: boolean;
   isDense?: boolean;
   isWinner?: boolean;
+  className?: string;
 }
 
 const colorClasses: Record<PlayerColor, string> = {
@@ -24,13 +25,14 @@ export const Circle = (props: CircleProps) => {
     isEmphasized = false,
     isDense = false,
     isWinner = false,
+    className,
   } = props;
 
   const isDisabled = color !== "empty";
 
   return (
     <div
-      className={`relative aspect-square min-w-8 rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} shadow-lg ${isDense ? "" : "sm:min-w-16"}`}
+      className={`relative aspect-square min-w-8 rounded-full ${isEmphasized ? "border-4 border-solid border-blue-500" : ""} shadow-lg ${isDense ? "" : "sm:min-w-16"} ${className ?? ""}`}
       onClick={onClick}
       role={onClick != null ? "button" : undefined}
       tabIndex={onClick != null ? (isDisabled ? -1 : 0) : undefined}

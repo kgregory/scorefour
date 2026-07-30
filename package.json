@@ -7,12 +7,15 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
     "start": "next start",
-    "test": "vitest",            
-    "test:watch": "vitest watch", 
-    "test:coverage": "vitest --coverage" , 
+    "test": "vitest",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest --coverage",
     "typecheck": "tsc --noEmit && echo '\\x1b[32m✔ No Typescript errors\\x1b[0m'",
-    "ci": "npm run typecheck && npm run lint && npm run test"
+    "ci": "npm run typecheck && npm run lint && npm run format && npm run test"
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.10.1",

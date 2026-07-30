@@ -32,9 +32,11 @@ const SetRowsContext = createContext<ContextSetter<number>>(undefined);
 const SetCurrentPlayerContext = createContext<ContextSetter<Player>>(undefined);
 const SetValuesContext = createContext<ContextSetter<Values>>(undefined);
 const SetWinnerContext = createContext<ContextSetter<Winner>>(undefined);
-const SetDifficultyContext = createContext<ContextSetter<Difficulty>>(undefined);
+const SetDifficultyContext =
+  createContext<ContextSetter<Difficulty>>(undefined);
 const SetScreenContext = createContext<ContextSetter<Screen>>(undefined);
-const SetWasQuitContext = createContext<ContextSetter<Player | null>>(undefined);
+const SetWasQuitContext =
+  createContext<ContextSetter<Player | null>>(undefined);
 
 interface GameStateProviderProps {
   children: React.ReactNode;
@@ -79,15 +81,21 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
                 <ValuesContext.Provider value={values}>
                   <SetValuesContext.Provider value={setValues}>
                     <CurrentPlayerContext.Provider value={currentPlayer}>
-                      <SetCurrentPlayerContext.Provider value={setCurrentPlayer}>
+                      <SetCurrentPlayerContext.Provider
+                        value={setCurrentPlayer}
+                      >
                         <WinnerContext.Provider value={winner}>
                           <SetWinnerContext.Provider value={setWinner}>
                             <DifficultyContext.Provider value={difficulty}>
-                              <SetDifficultyContext.Provider value={setDifficulty}>
+                              <SetDifficultyContext.Provider
+                                value={setDifficulty}
+                              >
                                 <ScreenContext.Provider value={screen}>
                                   <SetScreenContext.Provider value={setScreen}>
                                     <WasQuitContext.Provider value={wasQuit}>
-                                      <SetWasQuitContext.Provider value={setWasQuit}>
+                                      <SetWasQuitContext.Provider
+                                        value={setWasQuit}
+                                      >
                                         {props.children}
                                       </SetWasQuitContext.Provider>
                                     </WasQuitContext.Provider>
@@ -290,5 +298,13 @@ export const useStartGame = () => {
     setWinner(null);
     setWasQuit(null);
     setScreen("playing");
-  }, [columns, rows, setCurrentPlayer, setScreen, setValues, setWasQuit, setWinner]);
+  }, [
+    columns,
+    rows,
+    setCurrentPlayer,
+    setScreen,
+    setValues,
+    setWasQuit,
+    setWinner,
+  ]);
 };

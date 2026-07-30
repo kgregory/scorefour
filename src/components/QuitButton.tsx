@@ -1,34 +1,28 @@
 import { useState } from "react";
-import { useCurrentPlayer, useSetScreen, useSetWasQuit } from "~/context/GameState";
 
-export const QuitButton = () => {
-  const setScreen = useSetScreen();
-  const setWasQuit = useSetWasQuit();
-  const currentPlayer = useCurrentPlayer();
+interface QuitButtonProps {
+  onQuit: () => void;
+}
+
+export const QuitButton = ({ onQuit }: QuitButtonProps) => {
   const [confirming, setConfirming] = useState(false);
-
-  if (confirming) {
-    return (
-      <div className="flex items-center gap-3 text-sm text-slate-600">
-        <button
-          onClick={() => {
-            setWasQuit(currentPlayer);
-            setScreen("ended");
-          }}
-          className="btn"
-        >
-          Quit
-        </button>
-        <button onClick={() => setConfirming(false)} className="btn">
-          Keep playing
-        </button>
-      </div>
-    );
-  }
+  const toggleConfirming = () => setConfirming((v) => !v);
 
   return (
-    <button onClick={() => setConfirming(true)} className="btn">
-      Quit
-    </button>
+    <div className="flex flex-col items-center gap-3">
+      <button onClick={toggleConfirming}>
+        Quit {confirming ? " -" : " +"}
+      </button>
+      {confirming && (
+        <div className="flex flex-col items-center gap-2 text-xs text-slate-400">
+          <button className="hover:text-slate-600" onClick={onQuit}>
+            Quit Game
+          </button>
+          <button className="hover:text-slate-600" onClick={toggleConfirming}>
+            Keep Playing
+          </button>
+        </div>
+      )}
+    </div>
   );
 };

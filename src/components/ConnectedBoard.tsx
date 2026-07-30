@@ -1,6 +1,6 @@
 import { useDebouncedInteraction } from "~/hooks/useDebouncedInteraction";
 import { useColumns, useRows, useValues } from "~/context/GameState";
-import { BoardDisplay } from "./BoardDisplay";
+import { Board } from "./Board";
 
 interface ConnectedBoardProps {
   handleTurn?: (column: number) => void;
@@ -15,7 +15,7 @@ export const ConnectedBoard = ({ handleTurn }: ConnectedBoardProps) => {
   const canClick = useDebouncedInteraction();
 
   return (
-    <BoardDisplay
+    <Board
       values={values}
       columns={columns}
       rows={rows}
