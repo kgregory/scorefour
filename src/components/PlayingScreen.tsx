@@ -1,18 +1,44 @@
 import { PLAYER_ONE, PLAYER_TWO } from "~/utils/constants";
 import {
+  useColumns,
   useCurrentPlayer,
   usePlayers,
+  useRows,
   useSetScreen,
   useSetWasQuit,
+  useValues,
 } from "~/context/GameState";
+import { useDebouncedInteraction } from "~/hooks/useDebouncedInteraction";
 import { useUpdateGameState } from "~/hooks/useUpdateGameState";
 import { useSinglePlayerOpponent } from "~/hooks/useSinglePlayerOpponent";
 import { useResultReaction } from "~/hooks/useResultReaction";
-import { Circle } from "./Circle";
-import { ConnectedBoard } from "./ConnectedBoard";
+import { Board } from "./Board";
+import { Footer } from "./Footer";
 import { Heading } from "./Heading";
 import { PlayerChips } from "./PlayerChips";
 import { QuitButton } from "./QuitButton";
+
+const ConnectedBoard = ({
+  handleTurn,
+}: {
+  handleTurn: (column: number) => void;
+}) => {
+  const columns = useColumns();
+  const rows = useRows();
+  const values = useValues();
+  const canClick = useDebouncedInteraction();
+
+  return (
+    <Board
+      values={values}
+      columns={columns}
+      rows={rows}
+      onCellClick={(column) => {
+        if (canClick()) handleTurn(column);
+      }}
+    />
+  );
+};
 
 export const PlayingScreen = () => {
   const update = useUpdateGameState();
@@ -35,20 +61,17 @@ export const PlayingScreen = () => {
         <PlayerChips players={players} currentPlayer={currentPlayer} />
       </Heading>
       <ConnectedBoard handleTurn={update} />
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-2 text-2xl font-bold text-slate-700">
-          <Circle color={currentPlayer} isEmphasized={false} isDense />
-          <span className="capitalize">
-            It&apos;s {currentPlayer}&apos;s turn
-          </span>
-        </div>
+      <Footer
+        status={{ type: "turn", player: currentPlayer }}
+        playersPerDevice={players}
+      >
         <QuitButton
           onQuit={() => {
             setWasQuit(currentPlayer);
             setScreen("ended");
           }}
         />
-      </div>
+      </Footer>
     </div>
   );
 };

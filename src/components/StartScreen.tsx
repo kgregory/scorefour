@@ -8,6 +8,8 @@ import {
 import type { BoardValue } from "~/utils/types";
 import { useColumns, useRows } from "~/context/GameState";
 import { Board } from "./Board";
+import { Button } from "./Button";
+import { Footer } from "./Footer";
 import { Heading } from "./Heading";
 import { GameSettings } from "./GameSettings";
 
@@ -82,16 +84,11 @@ interface StartScreenProps {
 export const StartScreen = ({ onStart }: StartScreenProps) => (
   <div className="flex flex-col items-center gap-8">
     <Heading>
-      <button
-        onClick={onStart}
-        className="rounded bg-blue-600 px-6 py-2 font-semibold text-white shadow hover:bg-blue-700"
-      >
-        Start Game
-      </button>
+      <Button onClick={onStart}>Play Now</Button>
     </Heading>
     <DecorativeBoard />
-    <div className="flex flex-col items-center gap-3">
+    <Footer>
       <GameSettings />
-    </div>
+    </Footer>
   </div>
 );
