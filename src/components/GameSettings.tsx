@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { Players, Difficulty } from "~/utils/types";
 import {
   MIN_BOARD_DIM,
@@ -19,6 +18,7 @@ import {
   useDifficulty,
   useSetDifficulty,
 } from "~/context/GameState";
+import { Expander } from "./Expander";
 
 const BOARD_DIM_OPTIONS = Array.from(
   { length: MAX_BOARD_DIM - MIN_BOARD_DIM + 1 },
@@ -37,14 +37,9 @@ export const GameSettings = () => {
   const setRows = useSetRows();
   const setDifficulty = useSetDifficulty();
 
-  const [settingsVisible, setSettingsVisible] = useState(false);
-
   return (
-    <div className="flex flex-col items-center gap-3">
-      <button onClick={() => setSettingsVisible((v) => !v)}>
-        Settings {settingsVisible ? " -" : " +"}
-      </button>
-      {settingsVisible && (
+    <Expander label="Settings">
+      {() => (
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-[auto_auto] items-center gap-x-4 gap-y-1 text-sm">
             <label htmlFor="players">Players</label>
@@ -117,6 +112,6 @@ export const GameSettings = () => {
           </button>
         </div>
       )}
-    </div>
+    </Expander>
   );
 };
