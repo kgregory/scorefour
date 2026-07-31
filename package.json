@@ -6,8 +6,8 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "start": "next start",
@@ -18,32 +18,34 @@
     "ci": "npm run typecheck && npm run lint && npm run format && npm run test"
   },
   "dependencies": {
-    "@t3-oss/env-nextjs": "^0.10.1",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "canvas-confetti": "^1.9.3",
-    "next": "^14.2.4",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "zod": "^3.23.8"
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/react": "^16.3.0",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/eslint": "^8.56.10",
-    "@types/node": "^20.14.8",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@typescript-eslint/eslint-plugin": "^7.13.1",
-    "@typescript-eslint/parser": "^7.13.1",
-    "@vitejs/plugin-react": "^4.4.1",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.4",
-    "jsdom": "^26.1.0",
+    "@types/eslint": "^9.6.1",
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/parser": "^8.65.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.12",
+    "jsdom": "^29.1.1",
     "postcss": "^8.4.38",
     "prettier": "^3.3.2",
-    "prettier-plugin-tailwindcss": "^0.6.5",
-    "tailwindcss": "^3.4.4",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.4.5",
-    "vitest": "^3.1.2"
+    "vitest": "^4.1.10"
   },
   "ct3aMetadata": {
     "initVersion": "7.30.0"

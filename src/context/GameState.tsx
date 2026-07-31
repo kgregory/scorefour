@@ -2,8 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
-  useRef,
   useState,
 } from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -55,21 +53,24 @@ export const GameStateProvider = (props: GameStateProviderProps) => {
   const [screen, setScreen] = useState<Screen>("start");
   const [wasQuit, setWasQuit] = useState<Player | null>(null);
 
-  const screenRef = useRef(screen);
-  screenRef.current = screen;
+  const [prevColumns, setPrevColumns] = useState(columns);
+  const [prevRows, setPrevRows] = useState(rows);
+  const [prevPlayers, setPrevPlayers] = useState(players);
 
-  // Dimension changes: resize the board and reset turn order.
-  useEffect(() => {
-    if (screenRef.current === "ended") return;
-    setValues(Array<BoardValue>(rows * columns).fill(undefined));
-    setCurrentPlayer(PLAYER_ONE);
-  }, [columns, rows]);
-
-  // Player count change: reset the board but keep the current turn.
-  useEffect(() => {
-    if (screenRef.current === "ended") return;
-    setValues((prev) => Array<BoardValue>(prev.length).fill(undefined));
-  }, [players]);
+  if (prevColumns !== columns || prevRows !== rows) {
+    setPrevColumns(columns);
+    setPrevRows(rows);
+    if (screen !== "ended") {
+      setValues(Array<BoardValue>(rows * columns).fill(undefined));
+      setCurrentPlayer(PLAYER_ONE);
+    }
+  }
+  if (prevPlayers !== players) {
+    setPrevPlayers(players);
+    if (screen !== "ended") {
+      setValues((prev) => Array<BoardValue>(prev.length).fill(undefined));
+    }
+  }
 
   return (
     <PlayersContext.Provider value={players}>

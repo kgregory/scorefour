@@ -47,7 +47,7 @@ export const Circle = (props: CircleProps) => {
       aria-label={color !== "empty" ? color : "empty slot"}
     >
       <div
-        className={`absolute inset-0 flex select-none items-center justify-center rounded-full border-4 text-lg ${isWinner ? "animate-pulse" : ""} ${colorClasses[color]}`}
+        className={`absolute inset-0 flex items-center justify-center rounded-full border-4 text-lg select-none ${isWinner ? "animate-pulse" : ""} ${colorClasses[color]}`}
       >
         {!isDense && color !== "empty" && "4"}
       </div>

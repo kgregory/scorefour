@@ -8,9 +8,9 @@ interface ButtonProps {
 
 const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:
-    "rounded bg-blue-600 px-6 py-2 font-semibold text-white shadow hover:bg-blue-700",
+    "rounded-sm bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700",
   secondary:
-    "rounded border-2 border-blue-600 px-6 py-2 font-semibold text-blue-600 hover:bg-blue-50",
+    "rounded-sm border-2 border-blue-600 px-6 py-2 font-semibold text-blue-600 hover:bg-blue-50",
 };
 
 export const Button = ({
