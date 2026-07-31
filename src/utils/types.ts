@@ -17,5 +17,4 @@ export type Difficulty = "easy" | "medium" | "hard";
 
 /** "reactive" = take immediate wins/blocks, otherwise random; "minimax" = full lookahead */
 export type MoveStrategy =
-  | { type: "reactive" }
-  | { type: "minimax"; depth: number };
+  { type: "reactive" } | { type: "minimax"; depth: number };

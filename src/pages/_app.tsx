@@ -1,10 +1,10 @@
 import { type AppType } from "next/app";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 
 import "~/styles/globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: "../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
   variable: "--font-sans",
 });
 
